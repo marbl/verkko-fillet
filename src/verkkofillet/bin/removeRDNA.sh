@@ -39,7 +39,7 @@ fi
 echo "Running with mash $mash seqtk $seqtk and verkko $verkko"
 SCRIPT_DIR=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
 
-repeatUnit="$SCRIPT_DIR/../../data/dataset/rDNA_compressed.fasta"
+repeatUnit="$SCRIPT_DIR/../data/dataset/rDNA_compressed.fasta"
 if [[ "$#" -ge 1 ]]; then
    echo "Using custom repeat sequence $1"
    $seqtk hpc $1 > repeatUnit.hpc.fasta

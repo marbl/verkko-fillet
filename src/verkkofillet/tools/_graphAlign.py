@@ -6,9 +6,11 @@ import shlex
 import pandas as pd
 from tqdm import tqdm
 
-def graphIdx(graph = "assembly.homopolymer-compressed.gfa",
+def graphIdx(obj,
+             graph = "assembly.homopolymer-compressed.gfa",
              threads=1,
              GraphAligner_path="GraphAligner",
+             working_directory = "graphAlignment",
              prefix=None, 
              diploid_heuristic_cache = None,
              seeds_mxm_cache = None,
@@ -42,14 +44,28 @@ def graphIdx(graph = "assembly.homopolymer-compressed.gfa",
     print(f"But this step will take a while and use a lot of memory in jupyter notebook.")
     print(f"Highly recommend running this step in terminal. If you want to see the command, set showOnly=True")
     print(" ")
-
     
     graph = os.path.abspath(graph)
+    verkkoFilletDir = obj.verkko_fillet_dir
+    # print(f"verkkoFilletDir: {verkkoFilletDir}")
+    if working_directory == "graphAlignment":
+        working_directory = os.path.join(verkkoFilletDir, working_directory)
+    else:
+        working_directory = os.path.abspath(working_directory)
+
+    # print(f"print pwd : {os.getcwd()}")
+    # print(f"working_directory: {working_directory}")
+    if not os.path.exists(working_directory):
+        os.makedirs(working_directory)
+        print(f"Folder {working_directory} created.")
+    if not os.path.exists(os.path.join(working_directory, 'log')):
+        os.makedirs(os.path.join(working_directory, 'log'))
+        print(f"Folder {os.path.join(working_directory, 'log')} created.")
 
     if prefix == None:
-        prefix = graph
-        diploid_heuristic_cache = f"{prefix}_diploid-heuristic.index"
-        seeds_mxm_cache = f"{prefix}_seeds-mxm.index"
+        prefix = os.path.basename(graph).replace('.gfa', '')
+        diploid_heuristic_cache = f"{working_directory}/{prefix}_diploid-heuristic.index"
+        seeds_mxm_cache = f"{working_directory}/{prefix}_seeds-mxm.index"
         
     # check if the graph index exists if so, return
     if os.path.exists(f"{diploid_heuristic_cache}"):
@@ -60,19 +76,19 @@ def graphIdx(graph = "assembly.homopolymer-compressed.gfa",
         print(f"{seeds_mxm_cache} index exists.")
         return
     
-    log = os.path.join('log', 'graph_index.log')
+    log = os.path.join(verkkoFilletDir, 'log', 'graph_index.log')
     # Proceed only if the index file doesn't exist
     cmd = (
-        f"touch empty.fasta && "
+        f"touch {working_directory}/empty.fasta && "
         f"{GraphAligner_path} -t {threads} -g {graph} "
-        f"-f empty.fasta "
-        f"-a empty.gaf "
+        f"-f {working_directory}/empty.fasta "
+        f"-a {working_directory}/empty.gaf "
         f"--diploid-heuristic 21 31 "
         f"--diploid-heuristic-cache {diploid_heuristic_cache} "
         f"--seeds-mxm-cache-prefix {seeds_mxm_cache} "
         f"--bandwidth 15 --seeds-mxm-length 30 --mem-index-no-wavelet-tree "
         f"--seeds-mem-count 10000 > {log} && "
-        f"rm empty.fasta empty.gaf"
+        f"rm {working_directory}/empty.fasta {working_directory}/empty.gaf"
     )
 
     if showOnly:
@@ -92,10 +108,10 @@ def graphIdx(graph = "assembly.homopolymer-compressed.gfa",
         print(f"Command failed with error: {e.stderr.decode().strip()}")
 
 
-def graphAlign(graph = "assembly.homopolymer-compressed.gfa",
+def graphAlign(obj,
+               graph = "assembly.homopolymer-compressed.gfa",
                threads=1,
                GraphAligner_path="GraphAligner",
-               obj=None,
                prefix=None, 
                ReadList = None,
                alignNode = False,
@@ -117,9 +133,24 @@ def graphAlign(graph = "assembly.homopolymer-compressed.gfa",
     """
     # check if the graph index exists
     graph = os.path.abspath(graph)
+    if working_directory == "graphAlignment":
+        verkkoFilletDir = obj.verkko_fillet_dir
+        working_directory = os.path.join(verkkoFilletDir, working_directory)
+    else:
+        working_directory = os.path.abspath(working_directory)
+    print(f"working_directory: {working_directory}")
+    if not os.path.exists(working_directory):
+        os.makedirs(working_directory)
+        print(f"Folder {working_directory} created.")
+    if not os.path.exists(os.path.join(working_directory, 'log')):
+        os.makedirs(os.path.join(working_directory, 'log'))
+        print(f"Folder {os.path.join(working_directory, 'log')} created.")
+
+    if prefix == None:
+        prefix = os.path.basename(graph).replace('.gfa', '')  
     
     if diploid_heuristic_cache == None:
-        diploid_heuristic_cache = os.path.abspath(f"{graph}_diploid-heuristic.index")
+        diploid_heuristic_cache = f"{working_directory}/{prefix}_diploid-heuristic.index"
         # check if the diploid index exists if not, run the graphIdx function
         if not os.path.exists(diploid_heuristic_cache):
             print("Diploid index does not exist. Running graphIdx function...")
@@ -130,7 +161,7 @@ def graphAlign(graph = "assembly.homopolymer-compressed.gfa",
         print(f"mode : alignNode, multimapScoreFraction = {multimapScoreFraction}")
     
     if seeds_mxm_cache == None:
-        seeds_mxm_cache = os.path.abspath(f"{graph}_seeds-mxm.index")
+        seeds_mxm_cache = f"{working_directory}/{prefix}_seeds-mxm.index"
         # check if the seeds-mxm index exists if not, run the graphIdx function
         if not os.path.exists(seeds_mxm_cache):
             print("Seeds-mxm index does not exist. Running graphIdx function...")
@@ -144,19 +175,16 @@ def graphAlign(graph = "assembly.homopolymer-compressed.gfa",
         print(f"Folder {working_directory} created.")
     
     # Step 2: Generate ONT read list
-    if ReadList.endswith((".fa",".fasta",".fasta.gz",".fa.gz",".fastq",".fastq.gz","fq","fq.gz")):
-        print(f"single sequence file provided: {ReadList}")
-        ReadList = os.path.abspath(ReadList)
-        subprocess.run(f"echo {ReadList} > {ReadList}.list", shell=True, check=True)
-        ReadList = f"{ReadList}.list"
-
-    elif ReadList==None:
+    if ReadList==None:
         print(f"ReadList not provided. Generating ReadList from ONT files under 3-align/split/")
         if obj == None:
             print("Please provide the VerkkoFillet object for using the default ReadList generation.")
             return
         ReadList = os.path.join(working_directory, f"{prefix}.ReadList.txt")
         ontReads = os.path.join(obj.verkkoDir, "3-align/split/")
+        if not os.path.exists(ontReads):
+            print(f"ONT reads directory {ontReads} does not exist.")
+            return
         cmd = f"ls {ontReads}*.fasta.gz > {ReadList}"
         print(f"Command: {cmd}")
         try:
@@ -164,13 +192,16 @@ def graphAlign(graph = "assembly.homopolymer-compressed.gfa",
         except subprocess.CalledProcessError as e:
             print(f"Error generating ONT read list: {e}")
             return
+        
+    elif ReadList.endswith((".fa",".fasta",".fasta.gz",".fa.gz",".fastq",".fastq.gz","fq","fq.gz")):
+        print(f"single sequence file provided: {ReadList}")
+        ReadList = os.path.abspath(ReadList)
+        subprocess.run(f"echo {ReadList} > {ReadList}.list", shell=True, check=True)
+        ReadList = f"{ReadList}.list"
+  
     elif os.path.exists(ReadList):
         ReadList = os.path.abspath(ReadList)
-    
-    if prefix == None:
-        prefix = ReadList
 
-    # print(ReadList)
     # Step 3: Align reads
     gaf_path = os.path.join(working_directory, f"{prefix}.gaf")
     
@@ -184,8 +215,8 @@ def graphAlign(graph = "assembly.homopolymer-compressed.gfa",
         
         for i in tqdm(range(len(read_list)), desc="Processing reads"):
             read_file = read_list[i]
-            gaf_file = f"{prefix}_ont{i}.gaf"
-            log_file = f"{prefix}_ont{i}.log"
+            gaf_file = os.path.join(working_directory, f"{prefix}_ont{i}.gaf")
+            log_file = os.path.join(working_directory, f"{prefix}_ont{i}.log")
         
             # Safely construct the command
             cmd = (
@@ -204,6 +235,7 @@ def graphAlign(graph = "assembly.homopolymer-compressed.gfa",
             )
             if showOnly :
                 print(f"Command: {cmd}")
+                print(f"This shows the first read only. Please run this command in terminal to align all reads using a loop.")
                 break
             else:
                 try:
@@ -214,7 +246,7 @@ def graphAlign(graph = "assembly.homopolymer-compressed.gfa",
         
         # Concatenate GAF files
         concat_cmd = (
-            f"cat {prefix}_ont*.gaf > {gaf_path} && "
+            f"cat {os.path.join(working_directory, f'{prefix}_ont*.gaf')} > {gaf_path} && "
             f"rm {prefix}_ont* "
         )
         print(f"Concatenation command: {concat_cmd}")

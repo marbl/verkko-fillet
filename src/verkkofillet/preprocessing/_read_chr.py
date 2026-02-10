@@ -6,8 +6,8 @@ from natsort import natsorted
 def readChr(obj,mapFile, 
             chromosome_assignment_directory="chromosome_assignment", 
             stat_directory="stats",
-            sire=None, 
-            dam=None):
+            haplotype1=None,
+            haplotype2=None):
     """\
     Read the chromosome assignment results and store them in the object.
 
@@ -21,10 +21,10 @@ def readChr(obj,mapFile,
         The directory containing the chromosome assignment results. Default is "chromosome_assignment".
     stat_directory
         The directory containing the statistics. Default is "stats".
-    sire
-        The name of the sire. Default is "sire". Will ignore this if the haplotype is not starting with "sire", especially for not trio mode.
-    dam
-        The name of the dam. Default is "dam". Will ignore this if the haplotype is not starting with "dam", especially for not trio mode.
+    haplotype1
+        The name of haplotype 1 (e.g., "paternal" or "maternal"). Default is None.
+    haplotype2
+        The name of haplotype 2 (e.g., "paternal" or "maternal"). Default is None.
     
     Returns
     -------
@@ -103,11 +103,16 @@ def readChr(obj,mapFile,
     
     stat_db['ref_chr'] = pd.Categorical(stat_db['ref_chr'], categories=chrom_map['ref_chr'],ordered=True)
     
-    # Assuming `sire` and `dam` are defined variables    
-    if sire!=None and dam!=None:
+    # Assuming `sire` and `dam` are defined variables
+    if haplotype1!=None and haplotype2!=None:
+        hap1, hap_name1 = haplotype1.split(":") 
+        hap2, hap_name2 = haplotype2.split(":")
         stat_db['hap_verkko'] = stat_db['hap']
-        stat_db.loc[stat_db['hap_verkko'] == "sire", "hap"] = sire
-        stat_db.loc[stat_db['hap_verkko'] == "dam", "hap"] = dam
+        stat_db.loc[stat_db['hap_verkko'] == hap1, "hap"] = hap_name1
+        stat_db.loc[stat_db['hap_verkko'] == hap2, "hap"] = hap_name2
+    else:
+        stat_db['hap_verkko'] = stat_db['hap']
+        print("Haplotype names not provided, using default haplotype identifiers.")
     
     stat_db.loc[stat_db['scf_ctg'] == 0, "t2tStat"] = "not_t2t"
     stat_db.loc[stat_db['scf_ctg'] == 1, "t2tStat"] = "scf"
@@ -133,7 +138,7 @@ def detectBrokenContigs(obj):
     """
     obj = copy.deepcopy(obj)
     stats = obj.stats.copy()
-    tab = stats.groupby(["ref_chr","hap_verkko"])['contig'].count().reset_index()
+    tab = stats.groupby(["ref_chr","hap"])['contig'].count().reset_index()
     tab = tab.loc[tab['contig']>1].reset_index(drop=True)
     if len(tab)>0:
         print("Warning: the following chromosomes have more than one contig:")

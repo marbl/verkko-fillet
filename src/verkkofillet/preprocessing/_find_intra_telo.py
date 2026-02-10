@@ -201,25 +201,28 @@ def find_reads_intra_telo(tel, lineNum ,scfmap = "assembly.scfmap",layout = "6-l
 
     filtered_matches_body = filtered_matches[4:-1]
     filtered_matches_body = [entry.split("\t") for entry in filtered_matches_body]
-    df = pd.DataFrame(filtered_matches_body, columns=["readName", "start_hpc", "end_hpc"])
+    # print(filtered_matches_body)
+    df = pd.DataFrame(filtered_matches_body, columns=["readName", "start_hpc", "end_hpc","nTime","Quality"])
+    df = df[['readName', 'start_hpc', 'end_hpc','Quality']]
     
     df['start_hpc'] = df['start_hpc'].astype(int)
     df['end_hpc'] = df['end_hpc'].astype(int)
     
-    df['start'] = df[['end_hpc', 'start_hpc']].min(axis=1) * 1.6  # multiply 1.5 cuz this is baesd on HPC coordinates
-    df['end'] = df[['end_hpc', 'start_hpc']].max(axis=1) * 1.6    # multiply 1.5 cuz this is baesd on HPC coordinates
+    df['start'] = df[['end_hpc', 'start_hpc']].min(axis=1) * 1.6  # multiply 1.6 cuz this is based on HPC coordinates
+    df['end'] = df[['end_hpc', 'start_hpc']].max(axis=1) * 1.6    # multiply 1.6 cuz this is based on HPC coordinates
     
     pieceinfo = filtered_matches[0:4]
     pieceinfo = [entry.split("\t") for entry in pieceinfo]
 
-    df['type'] = df['readName'].apply(lambda x: 'ont' if ';' in x else 'hifi')
+    df['type'] = df['readName'].apply(lambda x: 'ont' if 'ont' in x else 'hifi')
     df['type'] = pd.Categorical(df['type'], categories=['ont','hifi'], ordered=True)
 
     if pos == "start":
         df_sub = df.loc[(df['start'] < bp)|(df['end'] < bp)]
     elif pos == "end":
-        bp_new = int(pieceinfo[1][1]) - (len_fai - bp)
-        df_sub = df.loc[(df['start'] > bp_new)|(df['end'] > bp_new)]
+        df['start'] = len_fai - int(pieceinfo[1][1]) + df['start']
+        df['end'] = len_fai - int(pieceinfo[1][1]) + df['end']
+        df_sub = df.loc[(df['start'] > bp)|(df['end'] > bp)]
     else:
         print("pos should be either start or end")
     
