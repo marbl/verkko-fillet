@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import re
+import numpy as np
 import copy
 
 
@@ -115,7 +116,7 @@ def find_intra_telo(obj, telo_file="internal_telomere/assembly_1/assembly.window
     return result_merged, tel
 
 
-def find_reads_intra_telo(tel, lineNum ,scfmap = "assembly.scfmap",layout = "6-layoutContigs/unitig-popped.layout"):
+def find_reads_intra_telo(tel, lineNum ,scfmap = "assembly.scfmap",layout = "6-layoutContigs/unitig-popped.layout", gap_bed= "stats/assembly.gaps.bed"):
     """\
     Find the reads support for the additional artifical sequences outside of the telomere.
 
@@ -165,38 +166,41 @@ def find_reads_intra_telo(tel, lineNum ,scfmap = "assembly.scfmap",layout = "6-l
     matches = re.findall(pattern, data, re.DOTALL)
     filtered_matches = [match for match in matches if contig in match]
     
-    # Regular expression to match all pieces
-    pattern = r'piece\d{6}'
-    
-    # Extract pieces from the data string
-    pieces = re.findall(pattern, filtered_matches[0])
-    
-    # Get the first and last piece
-    first_piece = pieces[0] if pieces else None
-    last_piece = pieces[-1] if pieces else None
-    
-    # Output the results
-    # print(f"First piece: {first_piece}")
-    # print(f"Last piece: {last_piece}")
-    
-    if pos == "start":
-        piece = first_piece
-    elif pos == "end":
-        piece = last_piece
-    else:
-        print("pos should be either start or end")
+    match_pieces = filtered_matches[0].split("\n") if filtered_matches else []
+    match_pieces.pop(0)
+    match_pieces.pop(-1)
+    # match_pieces
 
-    print("Looking for the reads from " + piece)
-    
+    # Get the first and last piece
+    if pos == 'start':
+        piece_selected = match_pieces[0] if match_pieces else None
+    elif pos == 'end':
+        piece_selected = match_pieces[-1] if match_pieces else None
+
+    if len(match_pieces) > 1 : 
+        gap = pd.read_csv(gap_bed, sep="\t", header=None, names=["chrom", "start", "end"])
+        gap_sub = gap.loc[gap['chrom'] == contig, ]
+        if pos == 'start':
+            piece_start = 0
+            piece_end = gap_sub.loc[gap_sub.index[0], 'start'] -1
+        if pos == 'end':
+            piece_start = gap_sub.loc[gap_sub.index[-1], 'end'] + 1
+            piece_end = len_fai
+
+    else:
+        piece_start = 0
+        piece_end = len_fai
+    print(f"the piece of interest is from {piece_start} to {piece_end}, match piece is {piece_selected}")
+
     with open(layout, 'rb') as f:
         data = f.read().decode('utf-8')  # Decode bytes to string
-    
+
     # Regular expression to match 'path' to 'end'
     pattern = r'(tig.*?end)'
-    
+
     # Find all matches
     matches = re.findall(pattern, data, re.DOTALL)
-    filtered_matches = [match for match in matches if piece in match]
+    filtered_matches = [match for match in matches if piece_selected in match]
     filtered_matches = filtered_matches[0].split("\n")
 
     filtered_matches_body = filtered_matches[4:-1]
@@ -204,25 +208,46 @@ def find_reads_intra_telo(tel, lineNum ,scfmap = "assembly.scfmap",layout = "6-l
     # print(filtered_matches_body)
     df = pd.DataFrame(filtered_matches_body, columns=["readName", "start_hpc", "end_hpc","nTime","Quality"])
     df = df[['readName', 'start_hpc', 'end_hpc','Quality']]
-    
+
+    df['end_hpc'] = df['end_hpc'].astype(int)
+    df['start_hpc'] = df['start_hpc'].astype(int)
+    piece_len_hpc = max(df['start_hpc'].max(), df['end_hpc'].max())
+
+    piece_len = piece_end - piece_start
+
+    print(f"the piece length is {piece_len}, the piece length in hpc is {piece_len_hpc}")
+
     df['start_hpc'] = df['start_hpc'].astype(int)
     df['end_hpc'] = df['end_hpc'].astype(int)
-    
-    df['start'] = df[['end_hpc', 'start_hpc']].min(axis=1) * 1.6  # multiply 1.6 cuz this is based on HPC coordinates
-    df['end'] = df[['end_hpc', 'start_hpc']].max(axis=1) * 1.6    # multiply 1.6 cuz this is based on HPC coordinates
-    
+
+    # scaling the hpc to real length
+    df['start'] = (df[['end_hpc', 'start_hpc']].min(axis=1) * piece_len / piece_len_hpc) + piece_start
+    df['end'] = (df[['end_hpc', 'start_hpc']].max(axis=1) * piece_len / piece_len_hpc ) + piece_start
+    df['start'] = df['start'].astype(int)
+    df['end'] = df['end'].astype(int)
+
     pieceinfo = filtered_matches[0:4]
     pieceinfo = [entry.split("\t") for entry in pieceinfo]
+    
+    def classify(name):
+        if name.startswith('ont'):
+            return 'ont'
+        elif name.startswith('hifi_m'):
+            return 'hifi'
+        elif name.startswith('hifi'):
+            return 'ont_corrected'
+        else:
+            return None
 
-    df['type'] = df['readName'].apply(lambda x: 'ont' if 'ont' in x else 'hifi')
-    df['type'] = pd.Categorical(df['type'], categories=['ont','hifi'], ordered=True)
+    df['type'] = df['readName'].apply(classify)
+    df['type'] = pd.Categorical(df['type'], categories=['ont','hifi','ont_corrected'], ordered=True)
 
     if pos == "start":
-        df_sub = df.loc[(df['start'] < bp)|(df['end'] < bp)]
+        # df_sub = df.loc[(df['start'] < bp)|(df['end'] < bp)]
+        df_sub = df.loc[df['start'].between(0,bp)]
     elif pos == "end":
-        df['start'] = len_fai - int(pieceinfo[1][1]) + df['start']
-        df['end'] = len_fai - int(pieceinfo[1][1]) + df['end']
-        df_sub = df.loc[(df['start'] > bp)|(df['end'] > bp)]
+        # df_sub = df.loc[(df['start'] > bp)|(df['end'] > bp)]
+        df_sub = df.loc[df['end'].between(bp,len_fai)]
     else:
         print("pos should be either start or end")
     
@@ -231,5 +256,6 @@ def find_reads_intra_telo(tel, lineNum ,scfmap = "assembly.scfmap",layout = "6-l
     print("Summary : ")
     print("   Num of ONT reads : " + str(df_sub_count.iloc[0,1]))
     print("   Num of HiFi reads : " + str(df_sub_count.iloc[1,1]))
+    print("   Num of ONT corrected reads : " + str(df_sub_count.iloc[2,1]))
     
     return df_sub, df

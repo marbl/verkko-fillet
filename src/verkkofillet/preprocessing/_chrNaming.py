@@ -60,7 +60,7 @@ def find_multi_used_node(obj):
     stats = obj.stats.copy()
     
     path['nodeSet'] = path['path'].apply(
-        lambda x: set(word.rstrip('-+') for word in x.replace(',', ' ').split())
+        lambda x: [y for y in re.split(r'[><]', x) if y] if re.search(r'[><]', x) else [word.rstrip('-+') for word in x.replace(',', ' ').split() if word.rstrip('-+')]
     )
     path = pd.merge(scfmap, path, how = 'outer',left_on = "pathName",right_on="name")
     path['nodeSet'] = path['nodeSet'].apply(remove_elements_starting_with_bracket)
@@ -149,7 +149,7 @@ def naming_contigs(obj, node_database, duplicate_nodes ,
     gfa_link = gfa_link[~gfa_link['end'].isin(duplicate_nodes)]
     
     path['nodeSet'] = path['path'].apply(
-        lambda x: set(word.rstrip('-+') for word in x.replace(',', ' ').split())
+        lambda x: set(y for y in re.split(r'[><]', x) if y) if re.search(r'[><]', x) else set(word.rstrip('-+') for word in x.replace(',', ' ').split() if word.rstrip('-+'))
     )
     path['path'] = path['nodeSet'].apply(lambda x: ','.join(x))
     path = pd.merge(scfmap, path, how = 'left',left_on = "pathName",right_on="name")
@@ -345,7 +345,7 @@ def keepNodesInUnresolvedGaps(obj):
     result
         List of nodes kept in unresolved gaps.
     """
-    gaps = obj.gaps[['gaps','fixedPath','notes']].copy()
+    gaps = obj.gaps[['gaps','fixedPath','notes','cat','name']].copy()
     gaps = gaps.reset_index()
     path = obj.paths.copy()
     path = path.reset_index()
@@ -357,23 +357,36 @@ def keepNodesInUnresolvedGaps(obj):
 
     for i in tqdm(range(len(gaps))):
         if gaps['gaps'][i] == 'startMarker':
-            note = gaps.loc[i, "notes"].split(" ")
-            source = note[1]
-            source = path.loc[path['name'] == source, 'path'].values[0].split(",")[-1].replace(" ", "")
-            target = note[3]
-            target = path.loc[path['name'] == target, 'path'].values[0].split(",")[0].replace(" ", "")
-            gapinfo = [source, "[gap]", target]
-            # print(f"source: {source}, target: {target}")
+            if gaps['cat'][i] == "connectContig":
+                note = gaps.loc[i, "notes"].split(" ")
+                source = note[1]
+                source = path.loc[path['name'] == source, 'path'].values[0].split(",")[-1].replace(" ", "")
+                target = note[3]
+                target = path.loc[path['name'] == target, 'path'].values[0].split(",")[0].replace(" ", "")
+                gapinfo = [source, "[gap]", target]
+                # print(f"source: {source}, target: {target}")
+            elif gaps['cat'][i] == 'addContig':
+                target = gaps['name'][i]
+                target_path = path.loc[path['name'] == target, 'path'].values[0]
+                fixed_path = gaps['fixedPath'][i]
+                gapinfo = [fixed_path, target_path]
         
-        elif gaps['gaps'][i] == 'endMarker': 
-            note = gaps.loc[i, "notes"].split(" ")
-            source = note[3]
-            source = path.loc[path['name'] == source, 'path'].values[0].split(",")[-1].replace(" ", "")
-            target = note[0]
-            target = path.loc[path['name'] == target, 'path'].values[0].split(",")[0].replace(" ", "")
-            gapinfo = [source, "[gap]", target]
-            # print(f"source: {source}, target: {target}")
-        
+        elif gaps['gaps'][i] == 'endMarker':
+            if gaps['cat'][i] == "connectContig": 
+                note = gaps.loc[i, "notes"].split(" ")
+                source = note[3]
+                source = path.loc[path['name'] == source, 'path'].values[0].split(",")[-1].replace(" ", "")
+                target = note[0]
+                target = path.loc[path['name'] == target, 'path'].values[0].split(",")[0].replace(" ", "")
+                gapinfo = [source, "[gap]", target]
+                # print(f"source: {source}, target: {target}")
+            elif gaps['cat'][i] == 'addContig':
+                target = gaps['name'][i]
+                target_path = path.loc[path['name'] == target, 'path'].values[0]
+                fixed_path = gaps['fixedPath'][i]
+                gapinfo = [target_path, fixed_path]
+                print(gapinfo)
+
         elif gaps['fixedPath'][i] == '':
             gapinfo = gaps['gaps'][i]
         
@@ -392,6 +405,8 @@ def keepNodesInUnresolvedGaps(obj):
         if index is not None:
             for idx in range(len(index)):
                 sliceIndex = index[idx]
+                if sliceIndex == 0 or sliceIndex >= len(gapinfo) - 1:
+                    continue
                 source = gapinfo[sliceIndex-1]
                 target = gapinfo[sliceIndex+1]
                 # print(f"source: {source}, target: {target}")
@@ -411,13 +426,11 @@ def keepNodesInUnresolvedGaps(obj):
         path_name = path.loc[i, 'name']
         # print(path_list)
         if all(item in result for item in path_list):
-            # print("hi")
             includelst.append(path_name)
         
     includelst = list(set(includelst))
     print(f"The total number of paths consisting of nodes should be preserved.: {len(includelst)}")
 
-    
     path.loc[path['name'].isin(includelst), 'rm'] = "keep_Nodes_in_unresolved_gaps"
     
     if "index" in path.columns:

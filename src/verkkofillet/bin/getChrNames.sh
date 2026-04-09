@@ -61,7 +61,11 @@ if [ $idy -lt 0 ] || [ $idy -gt 100 ] ; then
 fi
 
 if [ ! -e assembly.mashmap.out ]; then
-   $mashmap -r $ref -q $contigs --pi 95 -s 10000 -t 8  -o >(awk '$11 >= 50000' > assembly.mashmap.out)
+   # $mashmap -r $ref -q $contigs --pi 95 -s 10000 -t 8  -o >(awk '$11 >= 50000' > assembly.mashmap.out)
+   "$mashmap" -r "$ref" -q "$contigs" --pi 95 -s 10000 -t 8 \
+        -o temp.mashmap.out
+    awk '$11 >= 50000' temp.mashmap.out > assembly.mashmap.out
+    rm temp.mashmap.out
 fi
 
 
@@ -79,12 +83,24 @@ if [ ! -e $utigs_mashmap ]; then
 
    if [ $isRUK -gt 0 ]; then
       cd 6-rukki
-      $mashmap -r $hpcRef -q unitig*.fasta --pi 95 -s 10000 -f none -t 8 -o >(awk '$11 >= 50000' > unitigs.hpc.mashmap.out) 
+      # $mashmap -r $hpcRef -q unitig*.fasta --pi 95 -s 10000 -f none -t 8 -o >(awk '$11 >= 50000' > unitigs.hpc.mashmap.out) 
+      $mashmap -r "$hpcRef" -q unitig*.fasta --pi 95 -s 10000 -f none -t 8 -o unitigs.hpc.mashmap.raw
+      awk '$11 >= 50000' unitigs.hpc.mashmap.raw > unitigs.hpc.mashmap.out
+
       cd ..
       ln -s 6-rukki/unitigs.hpc.mashmap.out $utigs_mashmap
    elif [ $isHIC -gt 0 ]; then
       cd 8-hicPipeline
-      $mashmap -r $hpcRef -q unitigs.hpc.fasta --pi 95 -s 10000 -f none -t 8 -o >(awk '$11 >= 50000' > unitigs.hpc.mashmap.out)
+      # $mashmap -r $hpcRef -q unitigs.hpc.fasta --pi 95 -s 10000 -f none -t 8 -o >(awk '$11 >= 50000' > unitigs.hpc.mashmap.out)
+      $mashmap -r "$hpcRef" \
+         -q unitigs.hpc.fasta \
+         --pi 95 \
+         -s 10000 \
+         -f none \
+         -t 8 \
+         -o unitigs.hpc.mashmap.raw
+
+      awk '$11 >= 50000' unitigs.hpc.mashmap.raw > unitigs.hpc.mashmap.out
       cd ..
       ln -s 8-hicPipeline/unitigs.hpc.mashmap.out $utigs_mashmap
    else
@@ -92,8 +108,17 @@ if [ ! -e $utigs_mashmap ]; then
 	  if [ ! -e unitig-unrolled-unitig-unrolled-popped-unitig-normal-connected-tip.fasta ]; then
 	     cat unitig-unrolled-unitig-unrolled-popped-unitig-normal-connected-tip.gfa |awk '{if (match($1, "^S")) { print ">"$2; print $3}}'|fold -c  > unitig-unrolled-unitig-unrolled-popped-unitig-normal-connected-tip.fasta
 	  fi
-	  $mashmap -r $hpcRef -q unitig*.fasta --pi 95 -s 10000 -f none -t 8  -o >(awk '$11 >= 50000' > unitigs.hpc.mashmap.out)
-	  cd ..
+	  # $mashmap -r $hpcRef -q unitig*.fasta --pi 95 -s 10000 -f none -t 8  -o >(awk '$11 >= 50000' > unitigs.hpc.mashmap.out)
+     $mashmap -r "$hpcRef" \
+         -q unitig*.fasta \
+         --pi 95 \
+         -s 10000 \
+         -f none \
+         -t 8 \
+         -o unitigs.hpc.mashmap.raw
+
+      awk '$11 >= 50000' unitigs.hpc.mashmap.raw > unitigs.hpc.mashmap.out
+      cd ..
       ln -s 5-untip/unitigs.hpc.mashmap.out $utigs_mashmap
    fi
 fi

@@ -72,13 +72,14 @@ def checkGapFilling(obj):
         The updated 'gap' DataFrame.
     """
     obj_sub = copy.deepcopy(obj)
-    total = obj_sub.gaps.shape[0]  # Total number of gaps
     gap = obj_sub.gaps  # Assuming gap is the DataFrame containing gap information
-
-    gap['finalGaf'] = gap['finalGaf'].str.replace('<', '&lt;').str.replace('>', '&gt;')
-    gap['done'] = gap['finalGaf'].apply(lambda x: "✅" if x else "")
-    # Count the number of non-empty 'finalGaf' entries
-    current = gap['finalGaf'].apply(lambda x: pd.notna(x) and x != "").sum()
+    
+    gap = gap.loc[~gap['cat'].isin(['addContig','connectContig'])]
+    total = gap.shape[0]  # Total number of gaps
+    # gap['finalGaf'] = gap['finalGaf'].str.replace('<', '&lt;').str.replace('>', '&gt;')
+    # gap['done'] = gap['fixedPath'].apply(lambda x: "✅" if x else "")
+    # Count the number of non-empty 'fixedPath' entries
+    current = gap['fixedPath'].apply(lambda x: pd.notna(x) and x != "").sum()
     
     # Print the current and total number of filled gaps
     # print(f"Number of filled gaps: {current} of total gaps: {total}")
@@ -273,7 +274,8 @@ def connectContigs(obj, contig, contig_to,  at = "left", gap = "[N5000N:connectC
                   "endMatch" : "",
                   "finalGaf" : "",
                   "done" : True,
-                  "cat" : "connectContig",})
+                  "cat" : "connectContig",
+                  })
 
     gapdb = pd.concat([gapdb,gap_new_line], ignore_index=True)
     obj_sub = addHistory(obj_sub, f"{gapid_add} was created", 'connectContig')
@@ -286,7 +288,69 @@ def connectContigs(obj, contig, contig_to,  at = "left", gap = "[N5000N:connectC
     print(f"New gap was added to obj.gaps with gapId {gapid_add}")
     return obj_sub
 
+def addContigs(obj, new_path, contig_to,  at = "left", gap = "[N5000N:connectContig]"):
+    """
+    Connects two contigs by adding a gap between them.
 
+    Parameters
+    ----------
+    obj
+        The VerkkoFillet object to be used. 
+    new_path
+        The new path to connect. 
+    contig_to
+        The name of the contig to connect to. 
+    at
+        The position to connect the contig. Default is "left". Other option is "right".
+    gap
+        The gap to add between the contigs. Default is "[N5000N:connectContig]". 
+    flip
+        Whether to flip the path from contig. Default is False. If True, the path will be flipped.
+
+    Returns
+    -------
+        The updated VerkkoFillet object with new gap added.
+    """
+    obj_sub = copy.deepcopy(obj)
+    pathdb = obj_sub.paths.copy()
+    gapdb = obj_sub.gaps.copy()
+    gap= gap.replace(" ", "")
+
+    path2_path = new_path
+
+    gapid_add= f"gapid_{str(gapdb['gapId'].str.replace('gapid_','').astype(int).max()+1)}"
+
+    if at == "left":
+        marker = ["startMarker"]
+        if gap != "":
+            fixedPath = [path2_path] + [gap]
+        else:
+            fixedPath = [path2_path]
+    if at == "right":
+        marker = ['endMarker']
+        if gap != "":
+            fixedPath =[gap] +  [path2_path]
+        else:
+            fixedPath = [path2_path]
+        
+    fixedPath = ','.join(fixedPath)
+    gap_new_line = pd.DataFrame({"gapId": gapid_add, 
+                  "name" : [contig_to],
+                  "gaps" : marker,
+                  "notes" : f"connected new path to {contig_to} at {at} with {gap}",
+                  "fixedPath": fixedPath,
+                  "startMatch" : "",
+                  "endMatch" : "",
+                  "finalGaf" : "",
+                  "done" : True,
+                  "cat" : "addContig",})
+
+    gapdb = pd.concat([gapdb,gap_new_line], ignore_index=True)
+    obj_sub = addHistory(obj_sub, f"{gapid_add} was created", 'addContig')
+    
+    obj_sub.gaps = gapdb
+
+    return obj_sub
 
 def deleteGap(obj, gapId):
 
@@ -333,7 +397,9 @@ def saveGapNodes(obj, save = "gapNodes.tsv"):
     gapdf.loc[gapdf['cat'] == 'maynot_correct', 'color'] = '#eb34e5' #red
     gapdf.loc[gapdf['cat'] == 'random_assign', 'color'] = '#a020f0' #purple
     gapdf.loc[gapdf['cat'] == 'connectContig', 'color'] = '#fff34f' #yellow
+    gapdf.loc[gapdf['cat'] == 'addContig', 'color'] = '#fff34f' #yellow
     gapdf.columns = ['cat', 'node', 'color']
+    gapdf = gapdf[['node','cat','color']]
     print("Saving gap nodes to ", save)
     gapdf.to_csv(save, index=False, sep='\t')
 
@@ -404,7 +470,8 @@ def writeFixedPaths(obj, save_path = "assembly.fixed.paths.tsv", save_gaf = "ass
             path.loc[path['name'] == name, "path"] = fixed_path
     
     # Fix the connecting paths
-    gaps_connect = gaps[gaps['gaps'].isin(['startMarker', 'endMarker'])].reset_index(drop=True)
+    # gaps_connect = gaps[gaps['gaps'].isin(['startMarker', 'endMarker'])].reset_index(drop=True)
+    gaps_connect = gaps[gaps['cat'].isin(['connectContig'])].reset_index(drop=True)
 
     for i in range(len(gaps_connect)):
         note= gaps_connect.loc[i, 'notes'].split(" ")
@@ -434,11 +501,35 @@ def writeFixedPaths(obj, save_path = "assembly.fixed.paths.tsv", save_gaf = "ass
             newPath = newPath.replace("startMarker", "")
             
         if marker == "endMarker":
-            newPath = target_path + gap + source_path
+            newPath = [target_path] + [gap] + [source_path]
             newPath = [item for item in newPath if item != ""]
             newPath = ','.join(newPath)
             newPath = newPath.replace("endMarker", "")
             
+        newPath = newPath.replace(" ", "")
+        path.loc[path['name'] == target, 'path'] = newPath
+
+
+    gaps_connect = gaps[gaps['cat'].isin(['addContig'])].reset_index(drop=True)
+
+    for i in range(len(gaps_connect)):
+        marker = gaps_connect.loc[i, 'gaps']
+        fixed_path = gaps_connect.loc[i, 'fixedPath'].replace(" ", "")
+        target = gaps_connect.loc[i, 'name']
+        target_path = path.loc[path['name'] == target, 'path'].values[0].replace(" ", "")
+
+        if marker == "startMarker":
+            newPath = [fixed_path] + [target_path]
+            newPath = [item for item in newPath if item != ""]
+            newPath = ','.join(newPath)
+            newPath = newPath.replace("startMarker", "")
+
+        elif marker == "endMarker":
+            newPath = [target_path] + [fixed_path]
+            newPath = [item for item in newPath if item != ""]
+            newPath = ','.join(newPath)
+            newPath = newPath.replace("endMarker", "")
+
         newPath = newPath.replace(" ", "")
         path.loc[path['name'] == target, 'path'] = newPath
 
@@ -475,7 +566,7 @@ def writeFixedPaths(obj, save_path = "assembly.fixed.paths.tsv", save_gaf = "ass
     pat_filtered = pat_filtered.reset_index(drop = True)
 
     gaf = pat_filtered.copy()
-    gaf['path'] = pat_filtered['path'].apply(path_to_gaf).apply(lambda x: x.replace(' ', ''))
+    gaf['path'] = pat_filtered['path'].apply(path_to_gaf).apply(lambda x: x.replace(' ', '') if x is not None else '')
     print(" ")
     print(f"The total number of final paths is {len(pat_filtered)}")
     
@@ -598,13 +689,18 @@ def updateConnect(obj):
     gaps = gaps.loc[gaps['gaps'].isin(['startMarker', 'endMarker'])].reset_index(drop=True)
 
     for i in tqdm(range(len(gaps))):
-        note = gaps.loc[i, "notes"].split(" ")
-        source = note[1]
-        target = note[3]
-        ori = note[5]
-        flip = note[8]
-        
-        path.loc[path['name'] == source, 'rm'] = 'rm-connect-source' + "_" + target + "_" + ori + "_" + flip
+        if gaps['cat'][i] == "connectContig":
+            note = gaps.loc[i, "notes"].split(" ")
+            source = note[1]
+            target = note[3]
+            ori = note[5]
+            flip = note[8]
+            
+            path.loc[path['name'] == source, 'rm'] = 'rm-connect-source' + "_" + target + "_" + ori + "_" + flip
+
+        elif gaps['cat'][i] == "addContig":
+            print("")
+    
 
     obj.paths = path
     return obj

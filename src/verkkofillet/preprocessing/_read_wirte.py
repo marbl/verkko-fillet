@@ -333,10 +333,14 @@ def updateCNSdir_missingEdges(obj, new_folder_path,
     if not os.path.exists(missing_edge_dir):
         print("New verkko folder for CNS is not exists!")
         return
+    
+    file_list = glob.glob(os.path.join(missing_edge_dir, "patch.gapid_*.gaf"))  # Check if there are files in the missing edge directory
+    # get gapid_* from the file name and check if there are corresponding .gfa files
+    gapid_list = [os.path.basename(file).split(".")[1] for file in file_list]
+    print(f"Found gapid list that have been filled by missing edges function : {gapid_list}")
     script = os.path.abspath(os.path.join(script_path, "_updateCNSdir_missingEdges.sh"))
     cmd=f"sh {script} {filletDir} {verkkoDir} {newFolder} {final_gaf} {missing_edge_dir}"
     run_shell(cmd, wkDir=filletDir, functionName = "make_verkko_fillet_dir" ,longLog = longLog, showOnly = showOnly)
-
 
 def checkFiles(folder):
     files = [
@@ -345,7 +349,7 @@ def checkFiles(folder):
         '6-layoutContigs/consensus_paths.txt', '6-layoutContigs/nodelens.txt',
         '6-layoutContigs/ont-gapfill.txt', '6-layoutContigs/ont.alignments.gaf',  # Removed trailing space
         '7-consensus/ont_subset.fasta.gz', '7-consensus/ont_subset.id',
-        'hifi-corrected.fasta.gz'
+        'hifi-corrected.fasta.gz', "6-layoutContigs/combined-nodemap.txt", "6-layoutContigs/hifi.alignments.gaf",
     ]
     notExist = []
     for file in tqdm(files):
@@ -392,9 +396,6 @@ def mkCNSdir(obj, new_folder_path, final_gaf = "assembly.fixed.paths.gaf",
         print(f"missing_edge_dir {missing_edge_dir} is exist, set missingEdge to True")
         print(f"missingEdge mode is set to: {missingEdge}")
         
-    
-    
-
     newFolder = os.path.abspath(new_folder_path)
     verkko_fillet_dir = os.path.abspath(obj.verkko_fillet_dir)  # Define original directory
     verkkoDir = os.path.abspath(obj.verkkoDir)  # Define original directory
@@ -409,12 +410,13 @@ def mkCNSdir(obj, new_folder_path, final_gaf = "assembly.fixed.paths.gaf",
         return
 
     # Create symbolic links for directories
-    for folder in ["1-buildGraph", "2-processGraph", "3-align", "3-alignTips", "4-processONT", "6-rukki", "5-untip", "hifi-corrected.fasta.gz"]:
+    for folder in ["1-buildGraph", "2-processGraph", "3-align", "3-alignTips", "4-processONT", "6-rukki", "5-untip", 
+                   "hifi-corrected.fasta.gz", "assembly.colors.csv", "assembly.homopolymer-compressed.noseq.gfa",]:
         source_path = os.path.join(verkkoDir, folder)
         link_path = os.path.join(newFolder, folder)
 
         if not os.path.exists(source_path):
-            print(f"Warning: Directory {folder} does not exist in the original Verkko directory.")
+            print(f"Warning: Directory or file{folder} does not exist in the original Verkko directory.")
             continue
 
         # Check if symlink already exists
@@ -432,6 +434,8 @@ def mkCNSdir(obj, new_folder_path, final_gaf = "assembly.fixed.paths.gaf",
 
         # Create symbolic links for specific files
         files_to_link = [
+            "6-layoutContigs/combined-nodemap.txt",
+            "6-layoutContigs/hifi.alignments.gaf",
             "6-layoutContigs/combined-alignments.gaf",
             "6-layoutContigs/combined-edges.gfa",
             "6-layoutContigs/nodelens.txt",
@@ -455,6 +459,7 @@ def mkCNSdir(obj, new_folder_path, final_gaf = "assembly.fixed.paths.gaf",
     # Ensure `final_gaf` exists before copying
     final_gaf = os.path.abspath(final_gaf)
     target_gaf = os.path.join(newFolder, "6-layoutContigs", "consensus_paths.txt")
+    
 
     if not os.path.exists(final_gaf):
         print(f"Warning: File {final_gaf} does not exist in the original Verkko directory.")

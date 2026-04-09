@@ -101,8 +101,8 @@ def readOnNode(tel, lineNum, readBed, figName = None):
     df_copy['start'] = df_copy['start'].astype(int)
     df_copy['end'] = df_copy['end'].astype(int)
     df_copy['type'] = df_copy['type'].astype(str)
-    df_copy['start'] = df_copy['start']+1 * 1.6
-    df_copy['end'] = df_copy['end']+1 * 1.6
+    df_copy['start'] = df_copy['start'].astype(int)
+    df_copy['end'] = df_copy['end'].astype(int)
 
     # tel = tel.copy()  # Ensure tel is defined earlier
     contig = tel.loc[ind, "contig"].replace(".", "_").replace("-", "_")
@@ -139,7 +139,7 @@ def readOnNode(tel, lineNum, readBed, figName = None):
     else:
         
         print("Creating BED file")
-        df_bed = df_copy.loc[:, ['readName','start','end','type']].head(20)  # Ensure columns are correct
+        df_bed = df_copy.loc[:, ['readName','start','end','type']]  # Ensure columns are correct
         df_bed.columns = ["chrom", "start", "end", 'type']
         df_bed["chrom"] = contig
         df_bed["strand"] = "+"
@@ -167,7 +167,18 @@ def readOnNode(tel, lineNum, readBed, figName = None):
         df_bed['thickEnd'] = df_bed['end']
 
         ### Color by type
-        df_bed['color'] = df_bed['type'].apply(lambda x: '255,0,0' if x == 'ont' else '128,255,0')
+        # df_bed['color'] = df_bed['type'].apply(lambda x: '255,0,0' if x == 'ont' else '128,255,0')
+        def classify(name):
+            if name == 'ont':
+                return '255,0,0' #red
+            elif name == "hifi":
+                return '128,255,0' # green
+            elif name == "ont_corrected":
+                return "245,166,39" # orange
+            else:
+                return None
+
+        df_bed['color'] = df_bed['type'].apply(classify)
         df_bed = df_bed[['chrom', 'start', 'end', 'name', 'score', 'strand', 'thickStart', 'thickEnd', 'color']]
 
         # Write BED file
@@ -194,7 +205,7 @@ def readOnNode(tel, lineNum, readBed, figName = None):
             f"[{contig}]",
             f"file = {readBed}",
             f"title = Composition of reads",
-            "height = 3",
+            "height = 30",
             "color = bed_rgb",
             "border_color = None",
             "labels = false",
@@ -214,7 +225,7 @@ def readOnNode(tel, lineNum, readBed, figName = None):
             subprocess.run(f"echo {elements} >> {trackFile}", shell=True)
 
     
-    figName=f"internal_telomere/{prefix}_output.svg" if figName is None else figName
+    figName=f"internal_telomere/{prefix}_output.png" if figName is None else figName
 
     if os.path.exists(figName):
         print("Plot file exists")

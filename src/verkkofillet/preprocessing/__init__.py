@@ -2,7 +2,7 @@ from ._read_wirte import read_Verkko, save_Verkko, load_Verkko, mkCNSdir, update
 from ._read_chr import readChr, detectBrokenContigs
 from ._find_gaps import findGaps, find_elements_with_brackets
 from ._searchNodes import searchNodes, searchSplit, readGaf, find_hic_support, get_NodeChr,read_Scfmap
-from ._fill_gaps import fillGaps, writeFixedPaths, checkGapFilling, progress_bar, connectContigs, deleteGap,checkDisconnectNode, keepContig,updateConnect, writeFixedGraph, saveGapNodes
+from ._fill_gaps import fillGaps, writeFixedPaths, checkGapFilling, progress_bar, connectContigs, deleteGap,checkDisconnectNode, keepContig,updateConnect, writeFixedGraph, saveGapNodes, addContigs
 from ._estLoop import estLoops,calNodeDepth, impute_depth
 from ._getQV import getQV
 from ._find_intra_telo import find_intra_telo,find_reads_intra_telo
@@ -60,7 +60,7 @@ __all__ = [
     'getNodeCoor',
     'getNodeSpace_from_allPath',
 
-
+    "addContigs",
     "checkFiles",
     "grabNodesInGap",
     "checkNotUsedInGapFillingNodes",

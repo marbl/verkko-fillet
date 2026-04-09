@@ -54,6 +54,9 @@ def insertGap(gapid,
     """
 
     # Ensure absolute paths
+    cwd = os.getcwd()
+    print(f"Current working directory: {cwd}")
+
     outputDir = os.path.abspath(outputDir)
     # alignGAF = os.path.abspath(alignGAF)
     graph = os.path.abspath(graph)
@@ -121,8 +124,15 @@ def insertGap(gapid,
     #     print(f"Error code: {e.returncode}")
     #     print(f"Error output: {e.stderr.decode().strip()}")
     #     return
+    
 
+    # replace "&lt;" to "<" and "&gt;" to ">" in the subset_gaf file
     split_reads.to_csv(subset_gaf, sep='\t', header=False, index=False)
+    with open(subset_gaf, 'r') as file:
+        data = file.read()
+    data = data.replace('&lt;', '<').replace('&gt;', '>')
+    with open(subset_gaf, 'w') as file:
+        file.write(data)
 
     # Run Verkko gap insertion script
     patch_nogap = os.path.join(outputDir, f"patch.nogap.{gapid}.gaf")
@@ -165,7 +175,7 @@ def insertGap(gapid,
             new_node_id = [item for item in final_paths_split_forgapFill if item.startswith("gap")][0]
             new_node_strand = '+' if new_node_id.endswith('+') else '-'
             new_node_id = re.sub(r'[+-]$', '', new_node_id)
-            print("The new node id is:", new_node_id)
+            
 
             cmd = f"tail -3 missing_edge/patch.{gapid}.gfa > missing_edge/{gapid}.missing_edge.patching.gfa"
             subprocess.run(cmd, shell=True, check=True)
@@ -191,6 +201,7 @@ def insertGap(gapid,
             final_paths_split_forgapFill[idx] = new_node_id
             final_paths_split_forgapFill = ','.join(final_paths_split_forgapFill)
             
+            print("The new node id is:", new_node_id)
             print("The final path looks like:")
             print(final_paths_split_forgapFill)
             # return final_paths_split_forgapFill

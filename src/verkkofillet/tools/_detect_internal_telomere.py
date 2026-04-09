@@ -54,7 +54,7 @@ def detect_internal_telomere(obj,
         print("All output files already exist. Skipping internal telomere detection.")
         return
 
-    if os.path.exists(working_dir):
+    if not os.path.exists(working_dir):
         os.mkdir(working_dir)
 
     # Ensure script and working directory exist
@@ -72,6 +72,7 @@ def runTrimming(obj,
                 original_fasta="assembly.fasta", 
                 trim_bed="internal_telomere/assembly.fasta.trim.bed",
                 output_fasta=None, 
+                force = False,
                 ):
     """\
     Trim the contigs based on the provided coordinates.
@@ -95,15 +96,27 @@ def runTrimming(obj,
 
     """
 
+    if output_fasta is None:  # Use 'is None' for comparison
+        prefix = re.sub(r"\.gz|\.fasta", "", original_fasta)
+        output_fasta = prefix + "_trimmed.fasta"
+    
+    if force and output_fasta and os.path.exists(output_fasta):
+        print(f"Force is enabled. Removing existing file: {output_fasta}")
+        os.remove(output_fasta)
+
     # Save the bed file
-    trim_df = pd.DataFrame(trim_contig_dict)
+    rows = []
+    for contig, intervals in trim_contig_dict.items():
+        for start, end in intervals:
+            rows.append({'contig': contig, 'from': start, 'to': end})
+
+    trim_df = pd.DataFrame(rows)
+    
     trim_df.to_csv(trim_bed, sep='\t', header=False, index=False)
     original_fasta = os.path.abspath(original_fasta)
     trim_bed = os.path.abspath(trim_bed)
 
-    if output_fasta is None:  # Use 'is None' for comparison
-        prefix = re.sub(r"\.gz|\.fasta", "", original_fasta)
-        output_fasta = prefix + "_trimmed.fasta"
+
             
     # Get working directory and script path
     working_dir = os.path.abspath(obj.verkko_fillet_dir)
