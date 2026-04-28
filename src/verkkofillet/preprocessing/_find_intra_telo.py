@@ -116,7 +116,7 @@ def find_intra_telo(obj, telo_file="internal_telomere/assembly_1/assembly.window
     return result_merged, tel
 
 
-def find_reads_intra_telo(tel, lineNum ,scfmap = "assembly.scfmap",layout = "6-layoutContigs/unitig-popped.layout", gap_bed= "stats/assembly.gaps.bed"):
+def find_reads_intra_telo(tel, lineNum ,scfmap = "assembly.scfmap",layout = "assembly.homopolymer-compressed.layout", gap_bed= "stats/assembly.gaps.bed"):
     """\
     Find the reads support for the additional artifical sequences outside of the telomere.
 
@@ -205,9 +205,14 @@ def find_reads_intra_telo(tel, lineNum ,scfmap = "assembly.scfmap",layout = "6-l
 
     filtered_matches_body = filtered_matches[4:-1]
     filtered_matches_body = [entry.split("\t") for entry in filtered_matches_body]
+    filtered_matches_body_df = pd.DataFrame(filtered_matches_body)
     # print(filtered_matches_body)
-    df = pd.DataFrame(filtered_matches_body, columns=["readName", "start_hpc", "end_hpc","nTime","Quality"])
-    df = df[['readName', 'start_hpc', 'end_hpc','Quality']]
+    
+    if len(filtered_matches_body_df.columns) == 3 : 
+        df = pd.DataFrame(filtered_matches_body, columns=["readName", "start_hpc", "end_hpc"])
+    elif len(filtered_matches_body_df.columns) == 5:
+        df = pd.DataFrame(filtered_matches_body, columns=["readName", "start_hpc", "end_hpc","nTime","Quality"])
+        df = df[['readName', 'start_hpc', 'end_hpc','Quality']]
 
     df['end_hpc'] = df['end_hpc'].astype(int)
     df['start_hpc'] = df['start_hpc'].astype(int)
@@ -236,8 +241,11 @@ def find_reads_intra_telo(tel, lineNum ,scfmap = "assembly.scfmap",layout = "6-l
             return 'hifi'
         elif name.startswith('hifi'):
             return 'ont_corrected'
-        else:
-            return None
+        elif name.startswith("m"):
+            return 'hifi'
+        else : 
+            return 'ont'
+    
 
     df['type'] = df['readName'].apply(classify)
     df['type'] = pd.Categorical(df['type'], categories=['ont','hifi','ont_corrected'], ordered=True)

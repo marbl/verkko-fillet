@@ -35,7 +35,8 @@ def insertGap(gapid,
               split_reads,
               max_end_clip = 50000, 
               outputDir="missing_edge",
-              graph="assembly.homopolymer-compressed.gfa"):
+              graph="assembly.homopolymer-compressed.gfa",
+              verkko_path = None):
     """
     Find ONT support for Inserts a gap into the graph using split reads.
 
@@ -64,27 +65,28 @@ def insertGap(gapid,
     # Check if the working directory exists
     os.makedirs(outputDir, exist_ok=True)
 
-    try:
-        # Extract Verkko script path
-        script_path_proc = subprocess.run(
-            ["verkko"], 
-            text=True, 
-            capture_output=True, 
-            check=True
-        )
-        script_path_output = script_path_proc.stdout
-        script_path_line = [line for line in script_path_output.splitlines() if "Verkko module path" in line]
-        
-        if not script_path_line:
-            raise ValueError("Verkko module path not found in output.")
-        
-        verkko_path = script_path_line[0].split()[-1]
-        script = os.path.abspath(os.path.join(verkko_path, "scripts", "insert_aln_gaps.py"))
+    if verkko_path is None:
+        try:
+            # Extract Verkko script path
+            script_path_proc = subprocess.run(
+                ["verkko"], 
+                text=True, 
+                capture_output=True, 
+                check=True
+            )
+            script_path_output = script_path_proc.stdout
+            script_path_line = [line for line in script_path_output.splitlines() if "Verkko module path" in line]
+            verkko_path = script_path_line[0].split()[-1]
+
+        except (subprocess.CalledProcessError, ValueError) as e:
+            print(f"Error determining Verkko path: {e}")
+            return
+    
+    script = os.path.abspath(os.path.join(verkko_path, "scripts", "insert_aln_gaps.py"))
         
 
         
-    except (subprocess.CalledProcessError, ValueError) as e:
-        script = os.path.join(script_path,"insert_aln_gaps.py")
+    
         
     
     # Check if the script exists
