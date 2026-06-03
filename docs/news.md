@@ -1,24 +1,41 @@
 (News)=
-## News
+
+# 📣 News
 
 <!-- marker: after prelude -->
-### New Version (v0.1.21) Released
-This release includes numerous updates, new features, and bug fixes.
-Please review the details in the release notes [v0.1.21](release-notes/0.1.21.md). We strongly recommend using the latest version of verkko-fillet for refining and cleaning Verkko assemblies.
+
+## 🎉 v0.1.23 released
+
+The latest release of `verkko-fillet` is out, with a new automated preprocessing CLI, gzipped FASTA support across the chromosome-renaming pipeline, mashmap caching, plotting improvements (PDF by default, `force` overwrite, tighter layouts), and several QoL fixes.
+
+- 📄 Full changelog: [v0.1.23](release-notes/0.1.23.md)
+- 🆕 New tutorial: [Automatic Preprocessing](tutorials/basics/auto_preprocessing.md) — run the standard QC + chromosome-assignment + telomere pipeline end-to-end with a single command.
+
+We strongly recommend upgrading to the latest version for refining and cleaning Verkko assemblies.
+
+---
 
 <!-- marker: before old news -->
-### What’s Coming!
-More updates will be available in the next [v0.1.19](release-notes/0.1.19.md)!
 
-### A New Tutorial on Recovering T2T Contigs Has Been Added!
-A comprehensive [tutorial on recovering Telomere-to-Telomere (T2T) assemblies](tutorials/basics/telo.ipynb) has been added! It covers detecting internal telomeres, connecting broken contigs using chromosome assignment information, and linking small nodes to the main contig by aligning the node to the assembly graph.
+## 📚 Previous highlights
 
-### New Version(v0.1.18) Released with Numerous Updates and Enhancements!
-Please review the new functions and attributes of FilletObj in the [release notes v0.1.18](release-notes/0.1.18.md)! We strongly recommend using the latest version of verkko-fillet for cleaning Verkko assemblies.
+### v0.1.21
+This release shipped numerous updates, new features, and bug fixes. See the [v0.1.21 release notes](release-notes/0.1.21.md).
 
-### New Packages Required
-Version v0.1.18 requires additional Python packages, such as `scikit-learn`.
+### Tutorial: Recovering T2T contigs
+A comprehensive [tutorial on recovering Telomere-to-Telomere (T2T) assemblies](tutorials/basics/telo.ipynb) is available. It covers detecting internal telomeres, reconnecting broken contigs using chromosome-assignment information, and linking small nodes to main contigs via graph alignment.
 
-### `verkko-fillet` is now downloadable via `pip`! `2025-01-21`
+### v0.1.19
+Bug fixes and refinements. See the [v0.1.19 release notes](release-notes/0.1.19.md).
 
-`verkko-fillet` is now available via pip!
+### v0.1.18 — major update
+Numerous new functions and `FilletObj` attributes. See the [v0.1.18 release notes](release-notes/0.1.18.md).
+
+> **Note:** v0.1.18 introduced new Python dependencies, including `scikit-learn`.
+
+### `verkko-fillet` on PyPI — *2025-01-21*
+`verkko-fillet` is now installable via `pip`:
+
+```bash
+pip install verkkofillet
+```
