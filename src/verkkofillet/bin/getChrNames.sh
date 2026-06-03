@@ -5,7 +5,52 @@
 # the output is a csv file suitable for bandage to new chromosome assignments
 # it will also output assignments of the final sequences to each chromosome
 
+[ -n "$DEBUG" ] && set -x
+
 p=`pwd`
+
+# make help
+if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
+   echo "Usage: $0 [reference.fasta] [identity_threshold] [contigs_to_chr_names.tsv] [chr_name_for_contigs]"
+   echo "  reference.fasta: path to reference fasta file (default is human T2T CHM13 v1.1)"
+   echo "  identity_threshold: minimum percent identity for a contig to be assigned to a chromosome (default is 99)"
+   echo "  contigs_to_chr_names.tsv: optional tsv file mapping contig names to desired chromosome names. If not provided, contigs will be assigned to chromosomes based on best mashmap hit to reference. Format: <contig_name_in_fasta> <desired_chromosome_name>"
+   echo "  chr_name_for_contigs: optional chromosome name to assign to contigs that do not have a strong hit to the reference (default is . for unassigned)"
+   echo "  Examples:"
+   echo "    $0 chr1.fasta 99 contigs_to_chr_names.tsv chr1"
+   echo "    $0 chr1.fasta 99 . ."
+   exit 0
+fi
+
+# check dependency
+if [[ "$1" == "check_dependencies" ]]; then
+   echo "Checking dependencies..."
+   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+   missing=0
+   for tool in mashmap seqtk; do
+      if ! command -v "$tool" >/dev/null 2>&1; then
+         echo "Error: $tool not found on \$PATH"
+         missing=1
+      fi
+   done
+
+   neigh=$(which neighborhood 2>/dev/null)
+   if [ -z "$neigh" ] && [ -x "$SCRIPT_DIR/neighborhood" ]; then
+      neigh="$SCRIPT_DIR/neighborhood"
+   fi
+   if [ -z "$neigh" ] || [ ! -x "$neigh" ]; then
+      echo "Error: gfacpp 'neighborhood' not found (\$PATH or $SCRIPT_DIR/neighborhood)"
+      missing=1
+   fi
+
+   if [ "$missing" -ne 0 ]; then
+      exit 1
+   fi
+   echo "All dependencies found"
+   exit 0
+fi
+
 
 mashmap=$(which mashmap 2>/dev/null)
 if [ "x$mashmap" == "x" ]; then
@@ -19,20 +64,34 @@ if [ "x$seqtk" == "x" ]; then
    exit
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 neigh=$(which neighborhood 2>/dev/null)
-if [ "x$neigh" == "x" ]; then
-   neigh="/data/korens/devel/sg_sandbox/gfacpp/build/neighborhood"
+if [ "x$neigh" == "x" ] && [ -x "$SCRIPT_DIR/neighborhood" ]; then
+   neigh="$SCRIPT_DIR/neighborhood"
 fi
-if [ "x$neigh" == "x" ]; then
-   echo "Error: gfacpp not found"
-   exit
+if [ ! -x "$neigh" ]; then
+   echo "Error: gfacpp 'neighborhood' not found"
+   exit 1
 fi
 
-ref="/data/Phillippy/t2t-share/assemblies/release/v2.0/chm13v2.0.fasta"
+
+echo "Using mashmap: $mashmap"
+echo "Using seqtk: $seqtk"
+echo "Using neighborhood: $neigh"
+
+
+
 if [[ "$#" -ge 1 ]]; then
    echo "Using custom reference sequence $1"
-   ref=`realpath $1`
+   ref=$(realpath -- "$1")
 fi
+
+if [ -z "$ref" ]; then
+   echo "Error: reference fasta is required (run with -h for usage)"
+   exit 1
+fi
+
 hpcRef=`echo "$ref"|sed s/.fasta$/.hpc.fasta/g |sed s/.fa$/.hpc.fasta/g`
 
 if [[ "$ref" == *"hpc.fa"* ]]; then
@@ -70,6 +129,11 @@ fi
 
 
 utigs_mashmap=unitigs.hpc.mashmap.out
+
+# Detect which Verkko sub-pipeline produced the unitigs (used both for picking
+# the mashmap input below and for choosing the noseq.gfa to symlink later).
+isRUK=`ls 6-rukki/unitig*.fasta 2>/dev/null |wc -l |awk '{print $1}'`
+isHIC=`ls 8-hicPipeline/unitigs.hpc.fasta 2>/dev/null |wc -l |awk '{print $1}'`
 
 if [ -e contigs.gfa ]; then
    cat contigs.gfa |awk '{if (match($1, "^S")) print $1"\t"$2"\t*\tLN:i:"length($3); else print $0}'  > tmp.gfa

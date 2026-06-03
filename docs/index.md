@@ -1,5 +1,5 @@
 ```{include} ../README.md
-:end-before: '### Installation'
+:end-before: '## Installation'
 ```
 
 ```{toctree}

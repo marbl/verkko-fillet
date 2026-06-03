@@ -36,6 +36,7 @@ verkkofillet/bin/lock_folder.sh
 verkkofillet/bin/make_patched_rDNA.sh
 verkkofillet/bin/make_verkko_fillet_dir.sh
 verkkofillet/bin/meryl.sh
+verkkofillet/bin/neighborhood
 verkkofillet/bin/node_align.sh
 verkkofillet/bin/node_align_loop.sh
 verkkofillet/bin/path_to_gaf.py

@@ -4,6 +4,13 @@
 
 <!-- marker: after prelude -->
 
+## 🎉 v0.1.24 released
+
+A small maintenance release with debugging and reliability improvements to `getChrNames.sh`:
+- The `neighborhood` executable bundled alongside the script is now picked up automatically — no manual install required.
+
+📄 Full changelog: [v0.1.24](release-notes/0.1.24.md)
+
 ## 🎉 v0.1.23 released
 
 The latest release of `verkko-fillet` is out, with a new automated preprocessing CLI, gzipped FASTA support across the chromosome-renaming pipeline, mashmap caching, plotting improvements (PDF by default, `force` overwrite, tighter layouts), and several QoL fixes.

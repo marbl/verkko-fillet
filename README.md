@@ -1,38 +1,87 @@
-# Verkko-fillet : post-Verkko graph and assembly cleaning in Python
+<h1 align="center">🐟 verkko-fillet</h1>
 
-Please post an issue before running the consensus again. I need to check whether your folder structure was generated correctly before version 1.0. Thanks!
+<p align="center">
+  <em>Post-Verkko graph &amp; assembly cleaning, in Python.</em>
+</p>
 
-verkko-fillet is an easy-to-use, Python-based toolkit for cleaning graph paths generated from [Verkko](https://github.com/marbl/verkko) assembler. It is designed to be run within a Jupyter notebook to enable interactive use. Verkko-fillet includes tools for performing assembly quality checks, identifying and resolving gaps, assigning chromosomes, and generating a corrected path (in a GAF-like format), as is required to generate a Verkko consensus run.
+<p align="center">
+  <a href="https://pypi.org/project/verkkofillet/"><img alt="PyPI" src="https://img.shields.io/pypi/v/verkkofillet.svg?color=blue"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/jjuhyunkim/verkko-fillet.svg"></a>
+  <a href="https://github.com/jjuhyunkim/verkko-fillet/issues"><img alt="Issues" src="https://img.shields.io/github/issues/jjuhyunkim/verkko-fillet.svg"></a>
+</p>
 
-This Python-based implementation streamlines the entire process, starting right after the Verkko assembly is completed and preparing for the CNS run.
+---
+
+`verkko-fillet` is a Python toolkit for **cleaning, fixing, and gap-filling assemblies produced by the [Verkko](https://github.com/marbl/verkko) assembler**. It bridges the gap between a raw Verkko run and a polished, chromosome-assigned, T2T-ready consensus.
+
+Designed to be used **interactively in Jupyter notebooks**, it provides everything needed to QC the graph, assign chromosomes, recover broken contigs, fill gaps, and emit a corrected GAF path file ready for a Verkko consensus (CNS) run.
+
+## ✨ Highlights
+
+- 🧬 **Quality control out of the box** — N50, completeness, contig length, T2T status, chromosome coverage, and T2T QC plots.
+- 🗺️ **Chromosome assignment** — assign reference chromosomes and rename contigs based on a user-provided reference.
+- 🧩 **Gap filling &amp; path repair** — detect, connect, and fill gaps and write back a fixed GAF for building new consensus.
+- 🧪 **T2T QC** — detect internal telomeres for trimming, summarize per-contig telomere percentages at chromosome ends, and visualize them.
+- 🔁 **Reproducible** — every step is recorded on the `VerkkoFillet` object with timestamp.
 
 
-### Installation
+## Installation
 
-#### Other tools
-The gap-filling steps are easier when done interactively, such as in Jupyter Notebook or JupyterLab. Please install one and add the environment you generate to the Jupyter kernel to enable use.
-During gap filling, we highly recommend viewing the graph, coverage, and trio markers if available using [BandageNG](https://github.com/asl/BandageNG). Please install this as well.
+📘 For a more detailed installation guide, see <https://verkko-fillet.readthedocs.io/en/latest/installation.html>.
 
-Dependencies (will not be installed using the command below):
-* [gfacpp](https://github.com/snurk/gfacpp)
+`verkko-fillet` is on PyPI:
 
-#### Install Verkko-fillet and other dependencies
-Using `pip` is recommended. [link](https://pypi.org/project/verkkofillet/)
-
-The default name of the Mamba or Conda environment is `verkko-fillet`. If you want to use a different name, please update the name field in the `environment.yaml` file before proceeding. All required packages and external tools are installed using the `vf_environment.Jun252025.yml` file. This file specifies the exact tools and their versions, ensuring a reproducible environment setup.
-
-```
-# Generate a mamba or conda environment and install dependencies.
-mamba create -n verkko-fillet -f vf_environment.Jun252025.yml -vvv --dry-run --channel-priority flexible
-
-# Once you’ve checked the generated environment, please re-run this without the --dry-run option. It may take some time.
-mamba create -n verkko-fillet -f vf_environment.Jun252025.yml -vvv --channel-priority flexible
-
-# Acivate the environment.
-mamba activate verkko-fillet # or the name you desired
-
-# Add python jupyter kernel.
-python -m ipykernel install --user --name verkko-fillet --display-name verkko-fillet
+```bash
 pip install verkkofillet
 ```
+
+### External tool requirements
+
+A few external binaries are expected on `$PATH` (or alongside the shipped scripts in `src/verkkofillet/bin/`):
+
+- [`mashmap`](https://github.com/marbl/MashMap)
+- [`samtools`](https://www.htslib.org/) (with `bgzip`)
+- [`seqtk`](https://github.com/lh3/seqtk)
+
+## Typical workflow
+
+<p align="center">
+  <img src="docs/figs/Figure1.png" alt="verkko-fillet overview" width="720"><br>
+  <em>Figure 1. verkko-fillet pipeline overview.</em>
+</p>
+
+## 📚 Documentation
+
+Full documentation is hosted on **Read the Docs**: <https://verkko-fillet.readthedocs.io/>
+
+- [Installation](docs/installation.md)
+- [Usage principles](docs/usage-principles.md)
+- [Tutorials](docs/tutorials/index.md)
+  - [Automatic preprocessing](docs/tutorials/basics/auto_preprocessing.md)
+  - [Verkko QC](docs/tutorials/basics/verkkoQC.ipynb)
+  - [Recovering T2T contigs](docs/tutorials/basics/telo.ipynb)
+  - [Running Verkko consensus from a fixed path](docs/tutorials/basics/how_to_run_verkko_cns.md)
+- [API reference](docs/api/index.md)
+- [Release notes](docs/release-notes/index.md)
+
+## What's new
+
+See the [News](docs/news.md) page and the [Release notes](docs/release-notes/index.md) for the latest changes.
+
+## Citation
+
+If you use `verkko-fillet` in your work, please cite this [paper](https://www.biorxiv.org/content/10.1101/2025.10.01.679366v3):
+
+> Kim, J., Rosen, B. D., Fumagalli, S. E., Kuhn, K. L., Long, A., Schoenebeck, J. J., ... & Rhie, A. (2025). Finishing a complete giraffe genome from telomere to telomere with Verkko-Fillet. bioRxiv.
+
+
+
+## Contributing
+
+Issues and pull requests are welcome at <https://github.com/jjuhyunkim/verkko-fillet>.
+
+## License
+
+Released under the license described in [LICENSE](LICENSE).
+
 
