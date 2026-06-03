@@ -13,9 +13,9 @@ The latest release of `verkko-fillet` is out, with a new automated preprocessing
 
 We strongly recommend upgrading to the latest version for refining and cleaning Verkko assemblies.
 
----
-
 <!-- marker: before old news -->
+
+---
 
 ## 📚 Previous highlights
 
