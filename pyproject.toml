@@ -1,6 +1,6 @@
 [project]
 name = "verkkofillet"
-version = "0.1.21"
+version = "0.1.23"
 authors = [
   { name = "Juhyun Kim", email = "kimj75@nih.gov" },
 ]

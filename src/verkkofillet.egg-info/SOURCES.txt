@@ -19,6 +19,7 @@ verkkofillet/bin/_run_findingONTReads.sh
 verkkofillet/bin/_slurm_telomere_analysis.sh
 verkkofillet/bin/_sumit_meryl.sh
 verkkofillet/bin/_updateCNSdir_missingEdges.sh
+verkkofillet/bin/automatic_script.py
 verkkofillet/bin/build_sparse_compression_map.py
 verkkofillet/bin/changeChrName.sh
 verkkofillet/bin/detectTelo.sh

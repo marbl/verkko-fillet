@@ -11,8 +11,13 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.colors import ListedColormap
 from natsort import natsorted
 
+import logging
+logging.getLogger('fontTools').setLevel(logging.WARNING)
+logging.getLogger('fontTools.subset').setLevel(logging.WARNING)
+logging.getLogger('fontTools.ttLib').setLevel(logging.WARNING)
 
-def n50Plot(obj, width = 8,height = 5 , save = True, figName = None, nprint = None, colName = "ref_chr", dpi = 300):
+
+def n50Plot(obj, width = 8,height = 5 , save = True, figName = None, nprint = None, colName = "ref_chr", dpi = 300, force = False):
     """
     Generates a line plot showing the distribution of contig lengths. The N50 value is indicated by a red dashed line.
 
@@ -25,9 +30,9 @@ def n50Plot(obj, width = 8,height = 5 , save = True, figName = None, nprint = No
     height
         Height of the plot. Default is 5.
     save
-        If True, the plot is saved as a PNG file. Default is True.
+        If True, the plot is saved as a PDF file. Default is True.
     figName
-        Name of the saved plot. Default is None. If None, the plot is saved as "figs/N50.png". You can set the path and format to save the plot. For example, "figs/N50.pdf".
+        Name of the saved plot. Default is None. If None, the plot is saved as "figs/N50.pdf". You can set the path and format to save the plot. For example, "figs/N50.pdf".
     nprint
         Number of contigs to display. Default is None. If None, all contigs are displayed.
     colName
@@ -78,18 +83,23 @@ def n50Plot(obj, width = 8,height = 5 , save = True, figName = None, nprint = No
     plt.xticks(rotation=75, ha='right')
 
     if figName is None:
-        figName = f"figs/N50.lineplot.png"
+        figName = f"figs/N50.lineplot.pdf"
         
     if save:
         if not os.path.exists("figs"):
             os.makedirs("figs")
+        
+        if force and os.path.exists(figName):
+            # remove original plot
+            print(f"File {figName} already exists and force is set to True, removing the original file")
+            os.remove(figName)
 
         if os.path.exists(figName):
             print(f"File {figName} already exists")
             print("Please remove the file or change the name to save the new file")
 
         elif not os.path.exists(figName):
-            plt.savefig(figName, dpi=dpi)
+            plt.savefig(figName, dpi=dpi, bbox_inches='tight', pad_inches=0.1)
             print(f"File {figName} saved")
     print(f"n50={n50:,}")
     print(f"l50={l50}")
@@ -149,7 +159,7 @@ def qvPlot(obj, width = 5, height = 7, save = True, figName = None):
     # Remove legend from the second axis (if not needed)
     ax2.legend_.remove() if ax2.legend_ else None
     if figName is None:
-        figName = f"figs/qvplot.barplot.png"
+        figName = f"figs/qvplot.barplot.pdf"
 
     if save:
         if not os.path.exists("figs"):
@@ -166,7 +176,7 @@ def qvPlot(obj, width = 5, height = 7, save = True, figName = None):
     # Show the plot
     plt.show()
 
-def completePlot(obj, width = 6, height = 3, save = True, figName = None):
+def completePlot(obj, width = 6, height = 4, save = True, figName = None, force = False):
     """
     Generates a bar plot showing contig completeness grouped by reference chromosome and haplotype. The completeness of each chromosome is calculated by comparing it to the reference length. A completeness value greater than 100 indicates that the contig length exceeds the original reference length.
 
@@ -187,24 +197,28 @@ def completePlot(obj, width = 6, height = 3, save = True, figName = None):
     plt.title("completeness", fontsize=14)
     plt.xticks(rotation=45)
     if figName is None:
-        figName = f"figs/completePlot.barplot.png"
+        figName = f"figs/completePlot.barplot.pdf"
 
     if save:
         if not os.path.exists("figs"):
             print("Creating figs directory")
             os.makedirs("figs")
+        if force and os.path.exists(figName):
+            # remove original plot
+            print(f"File {figName} already exists and force is set to True, removing the original file")
+            os.remove(figName)
 
         if os.path.exists(figName):
             print(f"File {figName} already exists")
             print("Please remove the file or change the name")
 
         elif not os.path.exists(figName):
-            plt.savefig(figName)
+            plt.savefig(figName, bbox_inches='tight', pad_inches=0.1)
             print(f"File {figName} saved")
     plt.show()
 
 
-def contigLenPlot(obj, width = 6, height = 3, save = True, figName = None):
+def contigLenPlot(obj, width = 6, height = 3, save = True, figName = None, force = False):
     """
     Generates a bar plot showing length of contig by haplotype.
 
@@ -221,23 +235,28 @@ def contigLenPlot(obj, width = 6, height = 3, save = True, figName = None):
     plt.title("len(contig)", fontsize=14)
     plt.xticks(rotation=45)
     if figName is None:
-        figName = f"figs/contigLen.barplot.png"
+        figName = f"figs/contigLen.barplot.pdf"
 
     if save:
         if not os.path.exists("figs"):
             print("Creating figs directory")
             os.makedirs("figs")
 
+        if force and os.path.exists(figName):
+            # remove original plot
+            print(f"File {figName} already exists and force is set to True, removing the original file")
+            os.remove(figName)
+
         if os.path.exists(figName):
             print(f"File {figName} already exists")
             print("Please remove the file or change the name")
 
         elif not os.path.exists(figName):
-            plt.savefig(figName)
+            plt.savefig(figName, bbox_inches='tight', pad_inches=0.1)
             print(f"File {figName} saved")
     plt.show()
 
-def contigPlot(obj,width = 2, height = 4, save = True, figName = None):
+def contigPlot(obj,width = 2, height = 4, save = True, figName = None, force = False):
     """
     Generates a heatmap of statistics for each haplotype and contig. Brick color represents T2T contigs without gaps, salmon color indicates T2T contigs with gaps, and beige color denotes non-T2T contigs.
 
@@ -266,19 +285,24 @@ def contigPlot(obj,width = 2, height = 4, save = True, figName = None):
 
     # Display the plot
     if figName is None:
-        figName = f"figs/contigPlot.heatmap.png"
+        figName = f"figs/contigPlot.heatmap.pdf"
 
     if save:
         if not os.path.exists("figs"):
             print("Creating figs directory")
             os.makedirs("figs")
 
+        if force and os.path.exists(figName):
+            # remove original plot
+            print(f"File {figName} already exists and force is set to True, removing the original file")
+            os.remove(figName)
+            
         if os.path.exists(figName):
             print(f"File {figName} already exists")
             print("Please remove the file or change the name")
 
         elif not os.path.exists(figName):
-            plt.savefig(figName)
+            plt.savefig(figName, bbox_inches='tight', pad_inches=0.1    )
             print(f"File {figName} saved")
 
     plt.show()

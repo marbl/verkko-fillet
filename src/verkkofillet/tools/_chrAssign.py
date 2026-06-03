@@ -148,7 +148,7 @@ def convertRefName(fasta, map_file, out_fasta=None, showOnly=False):
             basename_fasta = os.path.splitext(basename_fasta)[0]  # Remove .gz
         
         basename_fasta = os.path.splitext(basename_fasta)[0]  # Remove the actual file extension
-        out_fasta = os.path.join(dir_fasta, f"{basename_fasta}.rename.fa")
+        out_fasta = os.path.join(dir_fasta, f"{basename_fasta}.rename.fa.gz")
 
     # Check if the output file already exists
     if os.path.exists(out_fasta):
@@ -156,7 +156,8 @@ def convertRefName(fasta, map_file, out_fasta=None, showOnly=False):
         return
     
     # Construct the awk command to replace headers
-    cmd = f"awk 'NR==FNR {{map[$1]=$2; next}} /^>/ {{header=substr($1,2); if (header in map) $1=\">\" map[header];}} {{print}}' {shlex.quote(map_file)} {shlex.quote(ref_fasta)} > {shlex.quote(out_fasta)}"
+    script = os.path.abspath(os.path.join(script_path, "changeChrName.sh"))
+    cmd=f"sh {shlex.quote(script)} {shlex.quote(map_file)} {shlex.quote(ref_fasta)} {shlex.quote(out_fasta)}"
 
     if showOnly:
         # If showOnly is True, just display the command instead of executing it

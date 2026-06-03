@@ -104,6 +104,9 @@ def find_intra_telo(obj, telo_file="internal_telomere/assembly_1/assembly.window
     result.loc[~missingTel & INTEL, 'problem'] = "OK/INTEL"
 
     result_merged = pd.merge(result, statsdb, left_on='contig', right_on='contig', how='right')
+    print("Merging with stats database...")
+    result_merged = result_merged[['contig','distal-left','distal-right','internal-left','internal-right','problem','ref_chr','contig_len','ref_chr_len','hap','old_chr','completeness','hap_verkko','t2tStat']]
+    
     
     
     # result_merged

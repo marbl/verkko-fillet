@@ -27,7 +27,7 @@ def handle_duplicates(series):
 
 
 def percTel(intra_telo , showContig=None,
-            width = 5, height = 7, save = True, figName = None):
+            width = 5, height = 7, save = True, figName = None, force = False):
     """
     Generates a heatmap showing the telomere percentage by contig.
 
@@ -42,9 +42,9 @@ def percTel(intra_telo , showContig=None,
     height
         Height of the plot. Default is 7.
     save
-        If True, the plot is saved as a PNG file. Default is True. 
+        If True, the plot is saved as a PDF file. Default is True. 
     figName
-        Name of the saved plot. Default is None. If None, the plot is saved as "figs/intra_telo.heatmap.png". 
+        Name of the saved plot. Default is None. If None, the plot is saved as "figs/intra_telo.heatmap.pdf". 
     """
     
     if showContig is None:
@@ -69,19 +69,23 @@ def percTel(intra_telo , showContig=None,
     ax.set(title="Telomere Percentage by Contig")
 
     if figName is None:
-        figName = f"figs/intra_telo.heatmap.png"
+        figName = f"figs/intra_telo.heatmap.pdf"
 
     if save:
         if not os.path.exists("figs"):
             print("Creating figs directory")
             os.makedirs("figs")
+        
+        if force and os.path.exists(figName):
+            print(f"File {figName} already exists, but force is True. Overwriting the file.")
+            os.remove(figName)
 
         if os.path.exists(figName):
             print(f"File {figName} already exists")
             print("Please remove the file or change the name")
 
         elif not os.path.exists(figName):
-            plt.savefig(figName)
+            plt.savefig(figName, bbox_inches='tight', pad_inches=0.1)
             print(f"File {figName} saved")
 
     plt.show()
@@ -225,7 +229,7 @@ def readOnNode(tel, lineNum, readBed, figName = None):
             subprocess.run(f"echo {elements} >> {trackFile}", shell=True)
 
     
-    figName=f"internal_telomere/{prefix}_output.png" if figName is None else figName
+    figName=f"internal_telomere/{prefix}_output.pdf" if figName is None else figName
 
     if os.path.exists(figName):
         print("Plot file exists")

@@ -12,7 +12,7 @@ matplotlib.rcParams['ps.fonttype'] = 42
 
 
 def showMashmapOri(obj, mashmap_out = "chromosome_assignment/assembly.mashmap.out", by = "chr_hap", 
-                   width = 5, height = 7, save = True, figName = None):
+                   width = 5, height = 7, save = True, figName = None, force = False):
     """
     Generates a bar plot showing the covered regions of the assembly for each reference.
 
@@ -86,19 +86,24 @@ def showMashmapOri(obj, mashmap_out = "chromosome_assignment/assembly.mashmap.ou
     # Adjust layout and show the plot
     plt.tight_layout()
     if figName is None:
-        figName = f"figs/intra_telo.heatmap.png"
+        figName = f"figs/showMashmapOri.heatmap.pdf"
 
     if save:
         if not os.path.exists("figs"):
             print("Creating figs directory")
             os.makedirs("figs")
 
+        if force and os.path.exists(figName):
+            # remove original plot
+            print(f"File {figName} already exists and force is set to True, removing the original file")
+            os.remove(figName)
+
         if os.path.exists(figName):
             print(f"File {figName} already exists")
             print("Please remove the file or change the name")
 
         elif not os.path.exists(figName):
-            plt.savefig(figName)
+            plt.savefig(figName, bbox_inches='tight', pad_inches=0.1)
             print(f"File {figName} saved")
     plt.show()
 
@@ -107,7 +112,7 @@ def nodeMashmapBlockSize(
         node,
         showNum = 10,
         width = 8, height = 5,
-        save = True, figName = None):
+        save = True, figName = None, force = False):
     """
     Plot the top 10 nodes with the largest block size aligned to a specific node.
 
@@ -147,17 +152,22 @@ def nodeMashmapBlockSize(
     plt.xticks(rotation=75)
     # Show the plot
     if figName is None:
-        figName = f"figs/mashmap.{node}_top{showNum}_blocksize.png"
+        figName = f"figs/mashmap.{node}_top{showNum}_blocksize.pdf"
 
     if save:
         if not os.path.exists("figs"):
             os.makedirs("figs")
+
+        if force and os.path.exists(figName):
+            # remove original plot
+            print(f"File {figName} already exists and force is set to True, removing the original file")
+            os.remove(figName)
 
         if os.path.exists(figName):
             print(f"File {figName} already exists")
             print("Please remove the file or change the name")
 
         elif not os.path.exists(figName):
-            plt.savefig(figName)
+            plt.savefig(figName, bbox_inches='tight', pad_inches=0.1)
             print(f"File {figName} saved")
     plt.show()

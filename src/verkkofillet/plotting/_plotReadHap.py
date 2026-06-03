@@ -47,7 +47,7 @@ def plotHist_readOnNode(nodeinfo, mergedb_all, loc_on_node, node, width = 5, hei
     plt.axvline(x=start_coor , color='red', linestyle='--')
     plt.axvline(x=end_coor , color='blue', linestyle='--')
     if figName is None:
-        figName = f"figs/intra_telo.heatmap.png"
+        figName = f"figs/intra_telo.heatmap.pdf"
 
     if save:
         if not os.path.exists("figs"):

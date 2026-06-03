@@ -5,8 +5,10 @@ import copy
 import time
 from tqdm import tqdm
 from .._default_func import addHistory
+from ._chrNaming import keepNodesInUnresolvedGaps
 # Configure logging
 logging.basicConfig(level=logging.INFO)
+
 
 def path_to_gaf(input_string):
     """
@@ -825,3 +827,36 @@ def writeFixedGraph(path, graph, out = "assembly.fixed.paths.gfa", dupNode=[]):
 
     node.to_csv(out, header = False, index = False, sep = '\t')
     edge.to_csv(out, header = False, index = False, sep = '\t', mode='a')
+
+
+def finalizingVerkkoFilletObj(obj, path_lst = None, min_hpc_len = 100_000):
+    """
+    This function finalizes the VerkkoFillet object by keeping specific contigs, checking for disconnected nodes, and updating the connections.
+    Parameters
+    ----------
+    obj
+        An verkko fillet object that contains the 'paths' DataFrame in obj.paths and
+        the 'stats' DataFrame in obj.stats. The 'stats' DataFrame should contain a 'contig' column with the names of the contigs to keep.
+    path_lst
+        A list of path names to keep. Default is None.
+    Returns
+    -------
+        The updated verkko fillet object with specific contigs kept, disconnected nodes checked, and connections updated.
+    """
+
+    obj = copy.deepcopy(obj)
+    contig_lst = obj.stats['contig'].to_list() # the main contigs that should be kept.
+    
+    obj = keepContig(obj, contig_lst, path_lst) # marking the main contigs. you can add more main paths in the path_lst. it marks obj.paths "rm" column without removing others. 
+
+    # Clean short disconnected nodes from path
+    print(f"Checking for disconnected nodes and filtering out those shorter than {min_hpc_len}bp...")
+    obj = checkDisconnectNode(obj, min_hpc_len = min_hpc_len) # mark short and disconnected paths(single node) in "rm" col in obj.paths. not removing them yet
+
+    print(f"Keeping nodes in the unresolved gap regions...")
+    obj, cludlst = keepNodesInUnresolvedGaps(obj) # mark the nodes that are in the unresolved gap region in "rm" col in obj.paths. They will be kept.
+
+    print(f"Updating the paths that are connected with connectContig and addContig...")
+    obj = updateConnect(obj) # if you connect contigs, this also be updated.
+
+    return obj,cludlst

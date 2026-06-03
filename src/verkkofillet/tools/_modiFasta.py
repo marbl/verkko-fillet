@@ -166,6 +166,16 @@ def renameContig(obj,
     print(" ")
     working_dir = os.path.abspath(obj.verkko_fillet_dir)
     script = os.path.abspath(os.path.join(script_path, "changeChrName.sh"))  # Assuming script_path is defined elsewhere
+
+    # Check if there is no duplications in the new chromosome names
+    if chrMap['contig'].duplicated().any():
+        print("Error: There are duplicated chromosome names in the new chromosome names. Please check the chromosome map file.")
+        return
+
+    if chrMap['new_contig_name'].duplicated().any():
+        print("Error: There are duplicated chromosome names in the new chromosome names. Please check the chromosome map file.")
+        return
+    
     chrMap=chrMap.merge(obj.scfmap, on = 'contig')
     chrMap.to_csv(out_mapFile, sep ='\t', header = None, index=False)
     
