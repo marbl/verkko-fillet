@@ -55,7 +55,7 @@ echo "Need telomere"
    cat $PREFIX.tmp | $bedtools sort |$bedtools merge -c 4 -o max > $PREFIX.telomere.bed
 fi
 
-if [ ! -e $gaps ] || [ mgaps -ot $asm ]; then
+if [ ! -e $gaps ] || [ $gaps -ot $asm ]; then
 echo "Need gaps"
   $seqtk gap $asm > $gaps
 fi

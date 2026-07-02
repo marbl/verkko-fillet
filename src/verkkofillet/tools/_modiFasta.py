@@ -30,6 +30,255 @@ import shutil
 
 from .._run_shell import run_shell
 script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../bin/'))
+dataset_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../data/dataset/'))
+
+def screen_asm(obj, threads=10, minLen=1000, ebv_fasta=None, rdna_fasta=None, mt_fasta=None, showOnly=False):
+    """
+    Screen the assembly for potential issues using a shell script.
+
+    Parameters
+    ----------
+    obj : object
+        An object containing the Verkko directory information.
+    threads : int, optional
+        Number of threads to use. Default is 10.
+    minLen : int, optional
+        Minimum contig length for screening. Default is 1000.
+    ebv_fasta : str, optional
+        Path to the EBV contaminant FASTA file. Default is None.
+    rdna_fasta : str, optional
+        Path to the rDNA contaminant FASTA file. Default is None.
+    mt_fasta : str, optional
+        Path to the MT contaminant FASTA file. Default is None.
+    showOnly : bool, optional
+        If True, only show the command without executing it. Default is False.
+    """
+    print(f"Starting assembly screening in {obj.verkkoDir} ...")
+    script = os.path.join(script_path, "screen-assembly.sh")
+    
+    if not os.path.exists(script):
+        print(f"Script not found: {script}")
+        return
+    
+    cmd = f"sh {script} {obj.verkkoDir} {threads} {minLen} {ebv_fasta} {rdna_fasta} {mt_fasta}"
+    
+    run_shell(cmd, wkDir=obj.verkkoDir, functionName="screen_asm", longLog=False, showOnly=showOnly)
+
+
+def fix_fasta_rDNA(fasta = "assembly_trimmed_flipped_rename_sortedhap.fasta", 
+                      gap_rDNA_info = "assembly_trimmed_flipped_rename_sortedhap.gaps.bed.rDNA.bounded.csv", 
+                      out_fasta = None, gap_size=100000, force=False):
+    """
+    Clean gaps in rDNA regions of a given FASTA file.
+
+    Parameters
+    ----------
+    fasta : str
+        Path to the input FASTA file.
+    gap_rDNA_info : str
+        Path to the rDNA gap information file.
+    gap_size : int, optional
+        Size of the gap to be cleaned. Default is 100000.
+    force : bool, optional
+        If True, overwrite existing output files. Default is False.
+
+    Returns
+    -------
+    None
+        The function executes a shell command to perform the cleaning.
+    """
+    
+    script = os.path.join(script_path, "rDNA_gap_cleaning.sh")
+    if out_fasta is None:
+        prefix = re.sub(r"(\.fasta|\.fa)(\.gz)?$", "", os.path.basename(fasta), flags=re.IGNORECASE)
+        out_fasta = prefix + "_rDNA_gap_cleaned.fasta"
+
+    if os.path.exists(f"{out_fasta}.gz") and not force:
+        print(f"Output FASTA file {out_fasta}.gz already exists. Use force=True to overwrite.")
+        return
+    
+    if not os.path.exists(fasta):
+        print(f"Input FASTA file not found: {fasta}")
+        return
+    
+    if not os.path.exists(script):
+        print(f"Script not found: {script}")
+        return
+    
+    print(f"Cleaning gaps in rDNA regions for {fasta} with gap size of {gap_size} ...")
+    print(f"Output FASTA will be saved to: {out_fasta}")
+    cmd = f"sh {script} {gap_rDNA_info} {fasta}  {out_fasta} {gap_size} {force}"
+    
+    try:
+        subprocess.run(cmd, shell=True, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error executing command: {cmd}")
+        print(f"Error message: {e}")
+        sys.exit(1)
+
+
+
+def find_gap_in_rDNA(rDNA_mapping = "rDNA_mapping/45S.mashmap.bed", 
+                     fasta = "assembly_trimmed_flipped_rename_sortedhap.fasta",
+                     padding = 100_000,
+                     idx = 90):
+    if not os.path.exists(rDNA_mapping):
+        print(f"rDNA mapping file not found: {rDNA_mapping}")
+        print(f"Please run the map_rDNA function first to generate the rDNA mapping file.")
+        return
+    
+    if not os.path.exists(fasta):
+        print(f"Assembly FASTA file not found: {fasta}")
+        return
+    
+    print(f"Finding gaps in rDNA mapping for {fasta} with padding of {padding} bp and idx threshold of {idx} ...")
+
+    fasta_name = re.sub(r"(\.fasta|\.fa)(\.gz)?$", "", os.path.basename(fasta), flags=re.IGNORECASE)
+
+    rDNA_map = pd.read_csv(rDNA_mapping, header = None, names = ['contig','start','end','name','idx','strand'], sep='\t')
+    rDNA_map = rDNA_map.loc[rDNA_map['idx'] > idx]
+
+    gaps = pd.read_csv(f"{fasta_name}.gaps.bed", header = None, names = ['contig','start','end'], sep='\t')
+
+    gaps['bounded_by_rDNA'] = False
+    for index, gap in gaps.iterrows():
+        contig = gap["contig"]
+        gap_start = int(gap["start"])
+        gap_end = int(gap["end"])
+
+        rDNA_entries = rDNA_map.loc[rDNA_map["contig"] == contig].copy()
+        if rDNA_entries.empty:
+            print(f"Gap {index} on {contig} ({gap_start}-{gap_end}) has no rDNA entries.")
+            continue
+
+        rDNA_entries["rDNA_min"] = rDNA_entries[["start", "end"]].min(axis=1)
+        rDNA_entries["rDNA_max"] = rDNA_entries[["start", "end"]].max(axis=1)
+
+        # Left flank: rDNA ends before gap start, but not farther than padding.
+        left_flank = (rDNA_entries["rDNA_max"] <= gap_start) & (rDNA_entries["rDNA_max"] >= gap_start - padding)
+        # Right flank: rDNA starts after gap end, but not farther than padding.
+        right_flank = (rDNA_entries["rDNA_min"] >= gap_end) & (rDNA_entries["rDNA_min"] <= gap_end + padding)
+
+        bounded = bool(left_flank.any() and right_flank.any())
+
+        if bounded:
+            print(f"Gap {index} on {contig} ({gap_start}-{gap_end}) is bounded by rDNA within {padding} bp.")
+            gaps.loc[index, "bounded_by_rDNA"] = True
+        else:
+            print(f"Gap {index} on {contig} ({gap_start}-{gap_end}) is NOT bounded by rDNA within {padding} bp.")
+            gaps.loc[index, "bounded_by_rDNA"] = False
+
+    gaps.to_csv(f"{fasta_name}.gaps.bed.rDNA.bounded.csv", index=False, sep='\t')
+    print(f"Gap analysis completed. Results saved to {fasta_name}.gaps.bed.rDNA.bounded.csv")
+
+
+def map_rDNA(rDNA = None, cpu=10, fasta = "assembly_trimmed_flipped_rename_sortedhap.fasta"):
+    """
+    Map rDNA sequences to the assembly using a shell script.
+
+    Parameters
+    ----------
+    rDNA : str
+        Path to the rDNA reference sequence file.
+    cpu : int
+        Number of CPU cores to use for the mapping.
+    fasta : str
+        Path to the assembly FASTA file.
+
+    Returns
+    -------
+    None
+        The function executes a shell command to perform the mapping.
+    """
+    fasta_name = re.sub(r"(\.fasta|\.fa)(\.gz)?$", "", os.path.basename(fasta), flags=re.IGNORECASE)
+
+    if not os.path.exists(fasta):
+        print(f"Assembly FASTA file not found: {fasta}")
+        return
+    print(f"fasta input : {fasta}")
+
+    script=f"{script_path}/45S_mapping.sh"
+    if rDNA is None:
+        rDNA=f"{dataset_path}/NT_167214.1.fa"
+
+    print(f"rDNA reference sequence: {rDNA}")
+
+    print(f"Align rDNA on fasta file ... ")
+    if os.path.exists(f"rDNA_mapping/45S.mashmap.bed"):
+        print(f"rDNA mapping file already exists: rDNA_mapping/45S.mashmap.bed")
+    else:
+        cmd = f"bash {script} {rDNA} {cpu} {fasta}"
+        try:    
+            subprocess.run(cmd, shell=True, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error generating index file: {cmd}")
+            print(f"Error message: {e}")
+            sys.exit(1) 
+    
+    # find gap
+    script=f"{script_path}/getT2T.sh"
+    
+    if os.path.exists(f"{fasta_name}.gaps.bed"):
+        print(f"Gaps file already exists: {fasta_name}.gaps.bed")
+    else:
+        cmd = f"bash {script} {fasta}"
+        try:    
+            subprocess.run(cmd, shell=True, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error generating index file: {cmd}")
+            print(f"Error message: {e}")
+            sys.exit(1)
+    
+
+
+def find_flip_candidates(obj, mashmap_file = "chromosome_assignment/assembly.mashmap.out"):
+    """
+    Identify contigs that may need to be flipped based on MashMap output and the Verkko object statistics.
+
+    Parameters
+    ----------
+    obj : Verkko object
+        The Verkko object containing assembly statistics.
+    mashmap_file : str, optional
+        Path to the MashMap output file. Default is "chromosome_assignment/assembly.mashmap.out".
+
+    Returns
+    -------
+    list
+        A list of contig names that are candidates for flipping.
+    """
+
+    df_mashmap = pd.read_csv(
+        mashmap_file,
+        sep="\t",
+        header=None,
+        usecols=[0, 4, 5, 8],
+        names=["contig", "strand", "ref_name", "alignment_block"],
+    )
+
+    df_mashmap["alignment_block"] = pd.to_numeric(df_mashmap["alignment_block"], errors="coerce")
+
+    df_flip_candidates = (
+        df_mashmap
+        .groupby(["contig", "strand", "ref_name"], as_index=False)["alignment_block"]
+        .sum()
+        .sort_values(["contig", "alignment_block"], ascending=[True, False])
+        .drop_duplicates(subset=["contig"], keep="first")
+        .reset_index(drop=True)
+    )
+
+    df_flip_candidates_list = df_flip_candidates.loc[df_flip_candidates["strand"] == "-"].reset_index(drop=True)
+
+    # Count all negative-strand top candidates and the subset present in obj.stats.
+    total_flip_num = len(df_flip_candidates_list)
+    main_contig_mask = df_flip_candidates_list["contig"].isin(obj.stats["contig"])
+
+    total_flip_num_main = int(main_contig_mask.sum())
+    flip_contig_list = df_flip_candidates_list.loc[main_contig_mask, "contig"].tolist()
+    print(f"Total negative-strand top candidates: {total_flip_num}")
+    print(f"Total negative-strand top candidates in main contigs: {total_flip_num_main}")
+
+    return flip_contig_list
 
 # Custom sort function that prioritizes base entries before random ones
 def sort_by_random_chr_hap(item, by="hap", type_list = ['mat', 'pat', 'hapUn']):
@@ -357,3 +606,44 @@ def filterContigs(mapfile, assembly, out_prefix=None, filter_chr_list=None, show
     run_shell(cmd, functionName = "filterContigs", wkDir = os.getcwd() ,longLog = False, showOnly = showOnly)
     
     print(f"Filtered FASTA: {out_prefix}.fa")
+
+
+def rDNA_gap_cleaning(fasta = "assembly_trimmed_flipped_rename_sortedhap.fasta", 
+                      gap_rDNA_info = "assembly_trimmed_flipped_rename_sortedhap.gaps.bed.rDNA.bounded.csv", 
+                      out_fasta = None, gap_size=100000, padding = 100_000, idx = 90, threads=10,
+                      force=False):
+    """
+    Clean gaps in rDNA regions of a given FASTA file.
+
+    Parameters
+    ----------
+    fasta : str
+        Path to the input FASTA file.
+    gap_rDNA_info : str
+        Path to the rDNA gap information file.
+    gap_size : int, optional
+        Size of the gap to be cleaned. Default is 100000.
+    padding : int, optional
+        Padding around the gap to be considered. Default is 100000.
+    idx : int, optional
+        Index parameter for gap cleaning. Default is 90.
+    threads : int, optional
+        Number of threads to use. Default is 10.
+    force : bool, optional
+        If True, overwrite existing output files. Default is False.
+
+    Returns
+    -------
+    None
+        The function executes a shell command to perform the cleaning.
+    """
+    ## align 45S to reference
+    map_rDNA(rDNA = None, cpu=threads, fasta = fasta)
+    # 
+    find_gap_in_rDNA(rDNA_mapping = "rDNA_mapping/45S.mashmap.bed", 
+                     fasta = fasta,
+                     padding = padding,
+                     idx = idx)
+    fix_fasta_rDNA(fasta = fasta, 
+                      gap_rDNA_info = gap_rDNA_info, 
+                      out_fasta = out_fasta, gap_size=gap_size, force=force)

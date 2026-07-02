@@ -5,10 +5,6 @@ mapFile=$1
 inputFasta=$2
 outputFasta=$3
 
-if [[ $outputFasta != *.gz  ]]; then
-  outputFasta="${outputFasta}.gz"
-fi
-
 # Debugging: Echo input parameters
 echo "Map File: $mapFile"
 echo "Input FASTA: $inputFasta"
@@ -36,7 +32,7 @@ fi
 # Create the awk command
 cmd1="awk 'NR==FNR{a[\$1]=\$2; next} /^>/{header=\$0; for (i in a) if (index(header, i) > 0) {gsub(i, a[i], header)} print header; next} !/^>/{print}' ${mapFile}.tmp $inputFasta_plain > ${outputFasta}.tmp"
 cmd2="samtools faidx  ${outputFasta}.tmp"
-cmd3="samtools faidx ${outputFasta}.tmp $(cut -f 2 ${mapFile}.tmp  | tr '\n' ' ') | bgzip -c > $outputFasta"
+cmd3="samtools faidx ${outputFasta}.tmp $(cut -f 2 ${mapFile}.tmp  | tr '\n' ' ') > $outputFasta"
 cmd4="samtools faidx $outputFasta"
 cmd5="rm ${outputFasta}.tmp* chrom.map.tmp"
 
@@ -46,7 +42,3 @@ echo "Executing command 3: $cmd3" && eval $cmd3 &&
 echo "Executing command 4: $cmd4" && eval $cmd4 &&
 echo "Executing command 5: $cmd5" && eval $cmd5 &&
 echo "All commands executed successfully."
-
-if [[ $inputFasta == *.gz  ]]; then
-  rm ${inputFasta_plain}
-fi

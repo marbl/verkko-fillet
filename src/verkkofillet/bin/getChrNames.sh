@@ -238,6 +238,12 @@ if [ $isMAT -eq 0 ]; then
 fi
 echo "$isMAT $label1 $label2 compNC: $cg regNC: $g"
 
+num_contig=$(grep -c $label1 $contigs)
+if [ $num_contig -eq 0 ]; then
+   printf "Error: no contigs found with label $label1 in $contigs\n"
+   exit 1
+fi
+
 minLen=5000000
 NUM=`cat assembly.homopolymer-compressed.chr.csv 2>/dev/null |wc -l`
 if [ $NUM -le 1 ]; then

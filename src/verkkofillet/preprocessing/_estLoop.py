@@ -188,7 +188,7 @@ def calNodeDepth(obj, width = 8, height = 5, save = True, figName = None, dpi = 
     #print(count_df)
     #print(nodedb)
     count_df.reset_index(drop=True, inplace=True)
-    nodedb = pd.merge(nodedb, count_df.loc[:,['node'] + columnList], on='node', how='left')
+    nodedb = pd.merge(nodedb, count_df.loc[:,['node'] + columnList], on='node', how='outer')
     obj.node = nodedb
 
     return obj
@@ -287,3 +287,34 @@ def estLoops(obj, nodeList, gaf="graphAlignment/verkko.graphAlign_allONT.gaf"):
         yaxis=dict(showgrid=True, gridcolor='grey')
     )
     fig.show()
+
+def checkNodeInfo(obj, node_list):
+    """
+    Check if the nodes in the node_list are in the obj.node['node'] and print the information if they are.
+    Parameters
+    ----------
+    obj : VerkkoFillet object
+        The object containing the node information.
+    node_list : list
+        A list of nodes to be checked.
+    Returns
+    -------
+    node_info : DataFrame
+        A DataFrame containing the information of the nodes in the node_list that are in the obj.node['node'].
+    """
+    # check if node_name is in obj.node['node'] and print the information if it is
+    node_in = []
+    node_out = []
+    for node in node_list:
+            if node in obj.node['node'].values:
+                node_in.append(node)
+            else:
+                node_out.append(node)
+    
+    print(f"Nodes in obj.node: {node_in}")
+    if len(node_out) > 0:
+        print(f"Nodes not in obj.node: {node_out}")
+    
+    node_info = obj.node[obj.node['node'].isin(node_in)]
+    
+    return node_info

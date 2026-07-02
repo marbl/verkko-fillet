@@ -2,13 +2,48 @@ import pandas as pd
 import logging
 import re
 import copy
+import os
 import time
+import glob
 from tqdm import tqdm
 from .._default_func import addHistory
 from ._chrNaming import keepNodesInUnresolvedGaps
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
+
+def find_screen_paths(obj, screen_name):
+    """
+    Finds paths in the VerkkoFillet object that contain contigs matching the specified screen name.
+    
+    Parameters
+    ----------
+        obj : VerkkoFillet
+            The VerkkoFillet object containing the assembly information.
+        screen_name : str
+            The name of the screen to search for.
+    
+    Returns
+    -------
+        list
+            A list of paths matching the specified screen name.
+    """
+    verkkoDir = obj.verkkoDir
+    fasta_files = glob.glob(f"{verkkoDir}/*{screen_name}*.fasta")
+    for file in fasta_files:
+        logging.info(f"Found file: {file}")
+        if not os.path.exists(f"{file}.fai"):  # Check if the file exists
+            raise FileNotFoundError(f"File not found: {file}.fai")
+    
+    fai_files = glob.glob(f"{verkkoDir}/*{screen_name}*.fasta.fai")
+    if len(fai_files) < 2:
+        print(f"Warning: Less than 2 files found for screen name '{screen_name}'. Found {len(fai_files)} file(s).")
+        return []
+    screen1 = pd.read_csv(fai_files[0], sep="\t", usecols=[0], header=None)[0].tolist()
+    screen2 = pd.read_csv(fai_files[1], sep="\t", usecols=[0], header=None)[0].tolist()
+    screen = list(set(screen1) | set(screen2))
+    screen_paths = obj.scfmap.loc[obj.scfmap['contig'].isin(screen)]['pathName'].unique().tolist()
+    return screen_paths
 
 def path_to_gaf(input_string):
     """
@@ -829,7 +864,7 @@ def writeFixedGraph(path, graph, out = "assembly.fixed.paths.gfa", dupNode=[]):
     edge.to_csv(out, header = False, index = False, sep = '\t', mode='a')
 
 
-def finalizingVerkkoFilletObj(obj, path_lst = None, min_hpc_len = 100_000):
+def finalizingVerkkoFilletObj(obj, path_lst = None, contig_lst = None, min_hpc_len = 100_000, mito = "mito", rDNA='rDNA'):
     """
     This function finalizes the VerkkoFillet object by keeping specific contigs, checking for disconnected nodes, and updating the connections.
     Parameters
@@ -845,7 +880,24 @@ def finalizingVerkkoFilletObj(obj, path_lst = None, min_hpc_len = 100_000):
     """
 
     obj = copy.deepcopy(obj)
-    contig_lst = obj.stats['contig'].to_list() # the main contigs that should be kept.
+    contig_lst_main = obj.stats['contig'].to_list() # the main contigs that should be kept.
+    
+    if contig_lst is not None:
+        contig_lst = contig_lst + contig_lst_main
+    else:
+        contig_lst = contig_lst_main
+    print(f"main contigs to keep: {len(contig_lst)} contigs in total.")
+    print(f"find mitochondrial contigs ... ")
+    mito_path = find_screen_paths(obj, screen_name = mito)
+    print(f"find mitochondrial contigs done. {len(mito_path)} paths found.")
+    print(f"find rDNA contigs ... ")
+    rDNA_path = find_screen_paths(obj, screen_name = rDNA)
+    print(f"find rDNA contigs done. {len(rDNA_path)} paths found.")
+    
+    if path_lst is not None:
+        path_lst = path_lst + mito_path + rDNA_path
+    else:
+        path_lst = mito_path + rDNA_path
     
     obj = keepContig(obj, contig_lst, path_lst) # marking the main contigs. you can add more main paths in the path_lst. it marks obj.paths "rm" column without removing others. 
 

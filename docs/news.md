@@ -4,6 +4,20 @@
 
 <!-- marker: after prelude -->
 
+## 🎉 v0.1.25 released
+
+This release adds new command-line utilities for contaminant screening and rDNA gap cleaning, plus clearer pre-run documentation for reproducible Verkko setup.
+
+- 🧪 New scripts: `screen-assembly.sh` and `rDNA_gap_cleaning.sh` for standardized assembly screening and rDNA-bounded gap replacement.
+- 📚 Documentation updates: improved scientific guidance in the new pre-run tutorial pages for input checks and Verkko execution modes.
+- ⚙️ Reliability improvements: stronger input validation, processing safeguards, and progress reporting in the new utilities.
+
+📄 Full changelog: [v0.1.25](release-notes/0.1.25.md)
+
+🆕 Pre-run tutorials:
+- [Check Input](tutorials/before_start/check_input.md)
+- [Run Verkko](tutorials/before_start/run_verkko.md)
+
 ## 🎉 v0.1.24 released
 
 A small maintenance release with debugging and reliability improvements to `getChrNames.sh`:

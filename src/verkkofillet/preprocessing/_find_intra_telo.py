@@ -119,7 +119,9 @@ def find_intra_telo(obj, telo_file="internal_telomere/assembly_1/assembly.window
     return result_merged, tel
 
 
-def find_reads_intra_telo(tel, lineNum ,scfmap = "assembly.scfmap",layout = "assembly.homopolymer-compressed.layout", gap_bed= "stats/assembly.gaps.bed"):
+def find_reads_intra_telo(obj, tel, lineNum ,scfmap = "assembly.scfmap",
+                          layout = None, 
+                          gap_bed= "stats/assembly.gaps.bed"):
     """\
     Find the reads support for the additional artifical sequences outside of the telomere.
 
@@ -143,6 +145,16 @@ def find_reads_intra_telo(tel, lineNum ,scfmap = "assembly.scfmap",layout = "ass
     intra_telo = tel.copy()    
     intra_telo = intra_telo.loc[lineNum,:]
     contig = intra_telo['contig']
+
+    verkko_dir = obj.verkkoDir
+
+    if layout is None:
+        layout = "assembly.homopolymer-compressed.layout"
+        if not os.path.exists(layout):
+            layout = f"{verkko_dir}/6-layoutContigs/unitig-popped.layout"
+            if not os.path.exists(layout):
+                raise FileNotFoundError(f"Layout file not found: {layout}")
+    print(f"Using layout file: {layout}")
 
     if (intra_telo['start'] - 0) > (intra_telo['totalLen']-intra_telo['end']):
         pos= "end"
