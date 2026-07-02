@@ -1,0 +1,27 @@
+Metadata-Version: 2.4
+Name: verkkofillet
+Version: 0.1.25
+Summary: A toolkit for cleaning Verkko assemblies.
+Home-page: https://github.com/jjuhyunkim/verkko-fillet
+Author: Juhyun Kim
+Author-email: kimj75@nih.gov
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: requires-python
+Dynamic: summary
+
+# verkko-fillet : post verkko graph and assembly cleaning in Python
+
+verkko-fillet is an easy-to-use toolkit for cleaning [Verkko](https://github.com/marbl/verkko) assemblies. It includes tools for generating the Verkko-Fillet object, performing assembly quality checks, identifying gaps, assigning chromosomes, searching for ONT reads to help resolve gaps, filling gaps, and generating the final Rukki path (in a GAF-like format) for future Verkko CNS runs.
+
+This Python-based implementation streamlines the entire process, starting right after the Verkko assembly is completed and preparing for the CNS run.
+
