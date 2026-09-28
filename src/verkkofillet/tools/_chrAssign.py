@@ -10,7 +10,7 @@ from .._run_shell import run_shell
 
 script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../bin/'))
 
-def chrAssign(obj, ref, working_directory="chromosome_assignment", fasta="assembly.fasta", chr_name="chr", idx=99, showOnly=False, force = False):
+def chrAssign(obj, ref, working_directory="chromosome_assignment", fasta="assembly.fasta", chr_name="chr", idx=99, showOnly=False, min_Length = 5000000, force = False):
     """\
     Run the script to align the assembly to the given reference using mashmap and obtain the chromosome assignment results.
 
@@ -30,6 +30,8 @@ def chrAssign(obj, ref, working_directory="chromosome_assignment", fasta="assemb
         Identity threshold to filter mashmap result [defualt : 99]
     showOnly (bool): 
         If set to True, the script will not be executed; it will only display the intended operations. [default : FALSE]
+    min_Length (int):
+        Minimum length of the contigs to be considered for chromosome assignment. [default : 5000000]
     force (bool):
         If set to True, the script will overwrite the existing files. [default : FALSE]
 
@@ -102,7 +104,7 @@ def chrAssign(obj, ref, working_directory="chromosome_assignment", fasta="assemb
         os.mkdir(working_dir)
 
     # Construct the shell command
-    cmd = f"bash {shlex.quote(script)} {shlex.quote(ref)} {shlex.quote(str(idx))} {shlex.quote(fasta)} {shlex.quote(chr_name)}"
+    cmd = f"bash {shlex.quote(script)} {shlex.quote(ref)} {shlex.quote(str(idx))} {shlex.quote(fasta)} {shlex.quote(chr_name)} {shlex.quote(str(min_Length))}"
     
     run_shell(cmd, wkDir=os.getcwd(), functionName="chrAssign", longLog=False, showOnly=showOnly)
 

@@ -244,7 +244,7 @@ if [ $num_contig -eq 0 ]; then
    exit 1
 fi
 
-minLen=5000000
+minLen=$5
 NUM=`cat assembly.homopolymer-compressed.chr.csv 2>/dev/null |wc -l`
 if [ $NUM -le 1 ]; then
    echo -e "node\tchr" > assembly.homopolymer-compressed.chr.csv
