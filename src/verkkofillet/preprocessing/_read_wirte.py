@@ -56,7 +56,8 @@ class FilletObj:
         
         return repr_str
 
-def readNode(obj, graph = "assembly.homopolymer-compressed.noseq.gfa", color = "assembly.colors.csv",
+def readNode(obj, graph = "assembly.homopolymer-compressed.noseq.gfa", 
+             color = "assembly.colors.csv",
              ont_cov = "8-hicPipeline/final_contigs/assembly.ont-coverage.csv",
              hifi_cov = "8-hicPipeline/final_contigs/assembly.hifi-coverage.csv"):
     
@@ -66,8 +67,6 @@ def readNode(obj, graph = "assembly.homopolymer-compressed.noseq.gfa", color = "
     obj = copy.deepcopy(obj)
     if not os.path.exists(graph):
         raise FileNotFoundError(f"File {graph} not found")
-    if not os.path.exists(color):
-        raise FileNotFoundError(f"File {color} not found")
     
     if not os.path.exists(ont_cov):
         print(f"File {ont_cov} not found")
@@ -83,7 +82,6 @@ def readNode(obj, graph = "assembly.homopolymer-compressed.noseq.gfa", color = "
         hifi_cov_df.columns = ['node', 'hifi_cov']
         hifi_cov_df['hifi_cov'] = pd.to_numeric(hifi_cov_df['hifi_cov'], errors='coerce')
 
-
     print(f"Reading {graph}")
     nodeLen = pd.read_csv(graph, sep='\t', header=None)
     nodeLen = nodeLen[nodeLen[0] == "S"]
@@ -93,15 +91,20 @@ def readNode(obj, graph = "assembly.homopolymer-compressed.noseq.gfa", color = "
     nodeLen['len'] = pd.to_numeric(nodeLen['len'], errors='coerce')  # Handle non-numeric values gracefully
     print(f"Number of nodes read from graph: {len(nodeLen)}")
 
-    print(f"Reading {color}")
-    color = pd.read_csv(color, sep='\t', header=0)
-    df = pd.merge(nodeLen, color, on='node', how='outer')
-    print(f"Number of nodes read from graph: {len(df)}")
+    if not os.path.exists(color):
+        print(f"File {color} not found")
+        print(f"This is normal if the color file is not available when HiC or Trio data were not used during Verkko assembly")
+        df = nodeLen.copy()
+    else:
+        color = pd.read_csv(color, sep='\t', header=0)
+        df = pd.merge(nodeLen, color, on='node', how='outer')
+        print(f"Number of nodes read from graph: {len(df)}")
 
     if ont_cov_df is not None:
         df = pd.merge(df, ont_cov_df, on='node', how='outer')
     if hifi_cov_df is not None:
         df = pd.merge(df, hifi_cov_df, on='node', how='outer')
+
     print(f"Number of nodes read from graph: {len(df)}")
     obj.node = df
     obj = addHistory(obj, f"node file is loaded from {graph}", {inspect.currentframe().f_code.co_name})
