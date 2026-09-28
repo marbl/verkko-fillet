@@ -66,7 +66,7 @@ Full documentation is hosted on **Read the Docs**: <https://verkko-fillet.readth
 
 ## What's new
 
-See the [News](docs/news.md) page and the [Release notes](docs/release-notes/index.md) for the latest changes.
+See the [News](docs/news.md) page and the [Changelog](https://github.com/marbl/verkko-fillet/blob/main/CHANGELOG.md) for the latest changes.
 
 ## Citation
 
@@ -78,7 +78,7 @@ If you use `verkko-fillet` in your work, please cite this [paper](https://www.ce
 
 ## Contributing
 
-Issues and pull requests are welcome at <https://github.com/jjuhyunkim/verkko-fillet>.
+Issues are welcome at <https://github.com/jjuhyunkim/verkko-fillet>.
 
 ## License
 
