@@ -8,9 +8,9 @@ if [ "x$mash" == "x" ]; then
    module load mash
    mash=$(which mash 2>/dev/null)
 fi
-if [ "x$mash" == "X" ]; then
+if [ "x$mash" == "x" ]; then
    echo "Error: mash not found"
-   exit
+   exit 1
 fi
 seqtk=$(which seqtk 2>/dev/null)
 if [ "x$seqtk" == "x" ]; then
@@ -19,7 +19,7 @@ if [ "x$seqtk" == "x" ]; then
 fi
 if [ "x$seqtk" == "x" ]; then
    echo "Error: seqtk not found"
-   exit
+   exit 1
 fi
 verkko=$(which verkko 2>/dev/null)
 if [ "x$verkko" == "x" ]; then
@@ -27,13 +27,13 @@ if [ "x$verkko" == "x" ]; then
 
    if [ ! -e $verkko ]; then
       echo "Error: verkko not found"
-      exit
+      exit 1
    fi
 fi
 verkko=`dirname $verkko |awk '{print $1"/../lib/verkko/scripts/remove_nodes_add_telomere.py"}'`
 if [ ! -e $verkko ]; then
    echo "Error: no verkko src found"
-   exit
+   exit 1
 fi
 
 echo "Running with mash $mash seqtk $seqtk and verkko $verkko"
@@ -75,7 +75,7 @@ fi
 
 if [ ! -e stats/assembly.telomere.bed ]; then
    echo "Need seqtk telo, please compute telomere first"
-   exit
+   exit 1
 fi
 $mash screen compressed.sketch.msh $repeatUnit | awk '{if ($1 > 0.9 && $4 < 0.05) print $NF}' > target.screennodes.out
 
