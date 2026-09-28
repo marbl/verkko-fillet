@@ -4,6 +4,35 @@
 
 <!-- marker: after prelude -->
 
+## 🎉 v0.1.26 released
+
+This release includes several bug fixes and improvements based on recently reported issues. Thank you to everyone who reported issues and provided feedback!
+
+Bug Fixes
+
+- **Improved Bash script execution**
+  - Fixed an issue where Bash scripts were executed using `sh` from Python subprocess calls.
+  - All Bash-based scripts are now explicitly executed with `bash`.
+  - This should resolve script execution and symbolic-link creation errors on systems where `/bin/sh` points to a non-Bash shell, such as `dash`.
+  - Related to #11 and #13.
+
+- **Support for assemblies without `assembly.colors.tsv`**
+  - verkko-fillet can now handle assemblies where `assembly.colors.tsv` is not available.
+  - This allows unphased Verkko assemblies to be loaded without raising an error.
+  - Fixes #14.
+
+Improvements
+
+- **Configurable minimum contig length in `chrAssign`**
+  - Added the `min_Length` parameter to `chrAssign`.
+  - The default remains `5,000,000` bp to preserve the previous behavior.
+  - Users can now lower the threshold for assemblies containing smaller chromosomes, such as bird dot chromosomes.
+  - Addresses #12.
+
+We recommend updating to the latest version and rerunning any steps affected by these issues.
+
+Thank you again for your feedback and contributions to improving verkko-fillet!
+
 ## 🎉 v0.1.25 released
 
 This release adds new command-line utilities for contaminant screening and rDNA gap cleaning, plus clearer pre-run documentation for reproducible Verkko setup.
@@ -17,6 +46,8 @@ This release adds new command-line utilities for contaminant screening and rDNA 
 🆕 Pre-run tutorials:
 - [Check Input](tutorials/before_start/check_input.md)
 - [Run Verkko](tutorials/before_start/run_verkko.md)
+
+<!-- marker: before old news -->
 
 ## 🎉 v0.1.24 released
 
@@ -34,7 +65,7 @@ The latest release of `verkko-fillet` is out, with a new automated preprocessing
 
 We strongly recommend upgrading to the latest version for refining and cleaning Verkko assemblies.
 
-<!-- marker: before old news -->
+
 
 ---
 

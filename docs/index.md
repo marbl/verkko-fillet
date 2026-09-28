@@ -13,7 +13,6 @@ tutorials/index
 api/index
 ecosystem
 contributors
-release-notes/index
 community
 news
 references
