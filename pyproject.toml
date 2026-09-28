@@ -2,10 +2,10 @@
 name = "verkkofillet"
 version = "0.1.26"
 authors = [
-  { name = "Juhyun Kim", email = "kimj75@nih.gov" },
+  { name = "Juhyun Kim", email = "juhyun.kim@jhu.edu" },
 ]
 maintainers = [
-  { name = "Juhyun Kim", email = "kimj75@nih.gov" },
+  { name = "Juhyun Kim", email = "juhyun.kim@jhu.edu" },
 ]
 description = "verkko fillet pkg"
 readme = "README.md"

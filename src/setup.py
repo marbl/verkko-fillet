@@ -4,7 +4,7 @@ setup(
     name="verkkofillet",                 # Your package name
     version="0.1.26",                      # Version
     author="Juhyun Kim",                   # Author name
-    author_email="kimj75@nih.gov", # Author email
+    author_email="juhyun.kim@jhu.edu", # Author email
     description="A toolkit for cleaning Verkko assemblies.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
