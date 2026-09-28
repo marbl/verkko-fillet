@@ -70,9 +70,9 @@ See the [News](docs/news.md) page and the [Release notes](docs/release-notes/ind
 
 ## Citation
 
-If you use `verkko-fillet` in your work, please cite this [paper](https://www.biorxiv.org/content/10.1101/2025.10.01.679366v3):
+If you use `verkko-fillet` in your work, please cite this [paper](https://www.cell.com/cell-genomics/fulltext/S2666-979X(26)00141-2):
 
-> Kim, J., Rosen, B. D., Fumagalli, S. E., Kuhn, K. L., Long, A., Schoenebeck, J. J., ... & Rhie, A. (2025). Finishing a complete giraffe genome from telomere to telomere with Verkko-Fillet. bioRxiv.
+> Kim, Juhyun, et al. "Finishing a complete giraffe genome from telomere to telomere with Verkko-Fillet." Cell Genomics 6.8 (2026).
 
 
 
