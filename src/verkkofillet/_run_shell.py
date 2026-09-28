@@ -54,7 +54,9 @@ def run_shell(cmd: str, wkDir: str, functionName: str, longLog: bool = False, sh
         print(f"[{functionName}] Command failed: {cmd}")
         print(f"[{functionName}] Error code: {e.returncode}")
         print(f"[{functionName}] Check logs for details: {log_file}.")
+        raise
     
     except Exception as e:
         # Generic error handling for other unexpected exceptions
         print(f"[{functionName}] An unexpected error occurred: {e}")
+        raise
