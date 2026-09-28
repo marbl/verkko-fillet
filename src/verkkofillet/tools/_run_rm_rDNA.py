@@ -61,7 +61,7 @@ def rmrDNA(
         print(f"Working directory not found: {rDNA_sequences}")
         return
 
-    cmd = f"sh {shlex.quote(script)} {shlex.quote(rDNA_sequences)}"
+    cmd = f"bash {shlex.quote(script)} {shlex.quote(rDNA_sequences)}"
 
     try:
         subprocess.run(

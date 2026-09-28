@@ -3,8 +3,9 @@
 verkko_original_dir=$(realpath $1)
 verkko_fillet_dir=$(realpath $2)
 
-rm -rf $verkko_fillet_dir
-
+if [ -d "$verkko_fillet_dir" ]; then
+    rm -rf "$verkko_fillet_dir"
+fi
 
 for folder in 5-untip 6-rukki 8-hicPipeline
 do

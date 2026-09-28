@@ -62,7 +62,7 @@ def detect_internal_telomere(obj,
         print(f"Script not found: {script}")
         return
     
-    cmd = f"sh {shlex.quote(script)} {name} 0.5 50000 {asm} {name}"
+    cmd = f"bash {shlex.quote(script)} {name} 0.5 50000 {asm} {name}"
     run_shell(cmd, wkDir=working_dir, functionName = "detect_internal_telomere" ,longLog = longLog, showOnly = showOnly)
 
 

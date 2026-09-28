@@ -21,7 +21,7 @@ if [ "x$seqtk" == "x" ]; then
 fi
 if [ "x$seqtk" == "x" ]; then
    echo "Error: seqtk not found"
-   exit
+   exit 1
 fi
 
 samtools=$(which samtools 2>/dev/null)
@@ -31,7 +31,7 @@ if [ "x$samtools" == "x" ]; then
 fi
 if [ "x$samtools" == "x" ]; then
    echo "Error: samtools not found"
-   exit
+   exit 1
 fi
 
 bedtools=$(which bedtools 2>/dev/null)
@@ -41,7 +41,7 @@ if [ "x$bedtools" == "x" ]; then
 fi
 if [ "x$bedtools" == "x" ]; then
    echo "Error: bedtools not found"
-   exit
+   exit 1
 fi
 
 if [ ! -e $PREFIX.telomere.bed ] || [ $PREFIX.telomere.bed -ot $asm ] ; then

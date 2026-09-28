@@ -209,15 +209,20 @@ def read_Verkko(verkkoDir,
         print(f"The Verkko fillet target directory has been created and set to: {verkko_fillet_dir}")
         print("All temporary and output files will be written to this directory.")
         script = os.path.abspath(os.path.join(script_path, "make_verkko_fillet_dir.sh"))
-        cmd=f"sh {script} {verkkoDir} {verkko_fillet_dir}"
-        run_shell(cmd, wkDir=verkko_fillet_dir, functionName = "make_verkko_fillet_dir" ,longLog = longLog, showOnly = showOnly)
+        cmd=f"bash {script} {verkkoDir} {verkko_fillet_dir}"
+        run_shell(cmd, 
+                  wkDir=verkko_fillet_dir, 
+                  functionName = "make_verkko_fillet_dir" ,
+                  longLog = longLog, 
+                  showOnly = 
+                  showOnly)
         
     
     # lock original verkko folder to prevent mess up
     if lock_original_folder :
         print(f"Lock the original Verkko folder to prevent it from being modified.")
         script = os.path.abspath(os.path.join(script_path, "lock_folder.sh"))
-        cmd=f"sh {script} {verkkoDir}"
+        cmd=f"bash {script} {verkkoDir}"
         run_shell(cmd, wkDir=verkko_fillet_dir, functionName = "lock_original_folder" ,longLog = longLog, showOnly = showOnly)
 
     # Set the additional attributes on the object
@@ -346,7 +351,7 @@ def updateCNSdir_missingEdges(obj, new_folder_path,
     gapid_list = [os.path.basename(file).split(".")[1] for file in file_list]
     print(f"Found gapid list that have been filled by missing edges function : {gapid_list}")
     script = os.path.abspath(os.path.join(script_path, "_updateCNSdir_missingEdges.sh"))
-    cmd=f"sh {script} {filletDir} {verkkoDir} {newFolder} {final_gaf} {missing_edge_dir}"
+    cmd=f"bash {script} {filletDir} {verkkoDir} {newFolder} {final_gaf} {missing_edge_dir}"
     run_shell(cmd, wkDir=filletDir, functionName = "make_verkko_fillet_dir" ,longLog = longLog, showOnly = showOnly)
 
 def checkFiles(folder):

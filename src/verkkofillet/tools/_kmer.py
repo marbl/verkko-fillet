@@ -40,7 +40,7 @@ def mkMeryl(obj, fofn, working_directory="kmer", prefix="assembly", fasta = "ass
     log_file_path = os.path.join(working_dir, "meryl.logs")
     
     # Kmer calculation
-    merqury_cmd = f"sh {script} {k} {fofn} {prefix}_meryl"
+    merqury_cmd = f"bash {script} {k} {fofn} {prefix}_meryl"
     try:
         with open(log_file_path, "w") as log_file:
             subprocess.run(
@@ -134,12 +134,12 @@ def calQV(obj,
         hap2_asm = os.path.abspath(haplotypes["sire"])
         script = os.path.abspath(os.path.join(script_path, "qv.sh"))
 
-        cmd_qv=f"sh {script} {prefix}_meryl.k{k}.meryl {hap1_asm} {hap2_asm} {prefix}.qv_cal"
+        cmd_qv=f"bash {script} {prefix}_meryl.k{k}.meryl {hap1_asm} {hap2_asm} {prefix}.qv_cal"
 
         run_shell(cmd_qv, wkDir=working_dir, functionName="qvCal", longLog=False, showOnly=showOnly)
         print(f"QV calculation was done!")
     else:
         print(f"trio mode is off")
-        cmd_qv=f"sh {script} {prefix}_meryl.k{k}.meryl {asm} {prefix}.qv_cal"
+        cmd_qv=f"bash {script} {prefix}_meryl.k{k}.meryl {asm} {prefix}.qv_cal"
         run_shell(cmd_qv, wkDir=working_dir, functionName="qvCal", longLog=False, showOnly=showOnly)
         print(f"QV calculation was done!")

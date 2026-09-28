@@ -47,7 +47,7 @@ def getT2T(obj, fasta="assembly.fasta", working_directory = "stats"):
     if not os.path.exists(working_dir):
         os.mkdir(working_dir)
     
-    cmd = f"sh {shlex.quote(script)} {shlex.quote(fasta)}"
+    cmd = f"bash {shlex.quote(script)} {shlex.quote(fasta)}"
     
     try:
         subprocess.run(

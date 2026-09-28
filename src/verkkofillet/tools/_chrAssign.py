@@ -159,7 +159,7 @@ def convertRefName(fasta, map_file, out_fasta=None, showOnly=False):
     
     # Construct the awk command to replace headers
     script = os.path.abspath(os.path.join(script_path, "changeChrName.sh"))
-    cmd=f"sh {shlex.quote(script)} {shlex.quote(map_file)} {shlex.quote(ref_fasta)} {shlex.quote(out_fasta)}"
+    cmd=f"bash {shlex.quote(script)} {shlex.quote(map_file)} {shlex.quote(ref_fasta)} {shlex.quote(out_fasta)}"
 
     if showOnly:
         # If showOnly is True, just display the command instead of executing it

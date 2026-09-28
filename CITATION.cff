@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use verkko-fillet in your research, please cite this software."
+title: "verkko-fillet: Post-Verkko graph & assembly cleaning, in Python"
+type: software
+version: "0.1.26"
+
+repository-code: "https://github.com/marbl/verkko-fillet"
+
+license: MIT
+
+keywords:
+  - genomics
+  - bioinformatics
+  - genome assembly
+  - Verkko
+  - T2T
+
+authors:
+  - family-names: "Kim"
+    given-names: "Juhyun"

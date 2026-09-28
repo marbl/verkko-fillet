@@ -60,7 +60,7 @@ def screen_asm(obj, threads=10, minLen=1000, ebv_fasta=None, rdna_fasta=None, mt
         print(f"Script not found: {script}")
         return
     
-    cmd = f"sh {script} {obj.verkkoDir} {threads} {minLen} {ebv_fasta} {rdna_fasta} {mt_fasta}"
+    cmd = f"bash {script} {obj.verkkoDir} {threads} {minLen} {ebv_fasta} {rdna_fasta} {mt_fasta}"
     
     run_shell(cmd, wkDir=obj.verkkoDir, functionName="screen_asm", longLog=False, showOnly=showOnly)
 
@@ -107,7 +107,7 @@ def fix_fasta_rDNA(fasta = "assembly_trimmed_flipped_rename_sortedhap.fasta",
     
     print(f"Cleaning gaps in rDNA regions for {fasta} with gap size of {gap_size} ...")
     print(f"Output FASTA will be saved to: {out_fasta}")
-    cmd = f"sh {script} {gap_rDNA_info} {fasta}  {out_fasta} {gap_size} {force}"
+    cmd = f"bash {script} {gap_rDNA_info} {fasta}  {out_fasta} {gap_size} {force}"
     
     try:
         subprocess.run(cmd, shell=True, check=True)
@@ -447,7 +447,7 @@ def renameContig(obj,
         return
         
     # Construct the shell command
-    cmd = f"sh {shlex.quote(script)} {shlex.quote(out_mapFile)} {shlex.quote(str(original_fasta))} {shlex.quote(outFasta)}"
+    cmd = f"bash {shlex.quote(script)} {shlex.quote(out_mapFile)} {shlex.quote(str(original_fasta))} {shlex.quote(outFasta)}"
     
     run_shell(cmd, wkDir=working_dir, functionName = "chrRename" ,longLog = False, showOnly = showOnly)
     print("The contig renaming was completed successfully!")
