@@ -41,7 +41,8 @@ def find_intra_telo(obj, telo_file="internal_telomere/assembly_1/assembly.window
     if not os.path.exists(telo_file):
         raise FileNotFoundError(f"File not found: {telo_file}")
     print(f"Reading file: {telo_file}")
-    tel = pd.read_csv(telo_file, sep='\t', header=None, usecols=[1, 2, 3, 4, 5])
+    # tel = pd.read_csv(telo_file, sep='\t', header=None, usecols=[1, 2, 3, 4, 5])
+    tel = pd.read_csv(telo_file, sep='\t', header=None, usecols=[0,1,2,3,4])
     tel.columns = ['contig', 'totalLen', 'start', 'end', 'teloPerct']
     tel['contig'] = tel['contig'].str.replace('^>', '', regex=True)
     tel['start'] = tel['start'].astype(int)

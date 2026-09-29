@@ -31,6 +31,9 @@ echo "threshold: $threshold"
 echo "ends: $ends"
 echo "asm: $asm"
 
+
+VGP_PIPELINE=$(realpath $(dirname "$0"))/../
+
 if [[ ! -z $5 ]]; then
     csv=$5
     echo "csv: $csv"
