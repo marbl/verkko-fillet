@@ -237,15 +237,15 @@ def read_Verkko(verkkoDir,
     os.chdir(verkko_fillet_dir)
     
     # read Path file
-    if paths_path != None:
+    if paths_path != None and os.path.exists(paths_path):
         obj = readPath(obj, paths_path)
 
     # read scfmap file
-    if scfmap_path != None:
+    if scfmap_path != None and os.path.exists(scfmap_path):
         obj = readScfmap(obj, scfmap_path)
 
-    # read node file 
-    if graph != None:
+    # read node file
+    if graph != None and os.path.exists(graph):
         obj = readNode(obj, graph, color)
         obj = readEdge(obj, graph)
     
