@@ -14,6 +14,7 @@ mkdir -p $verkko_fillet_dir/$folder
 fi
 done
 
+mkdir -p "$verkko_fillet_dir"
 # Change directory to the target directory
 cd "$verkko_fillet_dir" || { echo "Error: Cannot change directory to $verkko_fillet_dir"; exit 1; }
 
