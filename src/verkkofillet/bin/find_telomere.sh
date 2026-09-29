@@ -7,8 +7,8 @@ fi
 
 file=$1
 file_name=`basename $file`
-VGP_PIPELINE=$(readlink -f "$0")
-
+# VGP_PIPELINE=$(readlink -f "$0")
+VGP_PIPELINE=$(realpath $(dirname "$0"))/vgp-assembly/
 
 if [ ! -e $file_name ]; then
 	ln -s $file
