@@ -35,7 +35,7 @@ def find_intra_telo(obj, telo_file="internal_telomere/assembly_1/assembly.window
     if not isinstance(obj.stats, pd.DataFrame):
         raise ValueError("The stats database is not available. Please run the readChr function first.")
 
-    statsdb = obj.stats
+    statsdb = obj.stats.copy()
 
     telo_file = os.path.abspath(telo_file)
     if not os.path.exists(telo_file):
@@ -66,7 +66,6 @@ def find_intra_telo(obj, telo_file="internal_telomere/assembly_1/assembly.window
     # Drop the rows that have been merged
     tel = tel.drop(rows_to_remove).reset_index(drop=True)
 
-
     tel['telomere'] = 'distal'
     tel['contig_start_len'] = tel['start']
     tel['contig_end_len'] = tel['totalLen'] - tel['end']
@@ -90,25 +89,27 @@ def find_intra_telo(obj, telo_file="internal_telomere/assembly_1/assembly.window
 
     tel['tel-arm'] = tel['telomere'] + "-" + tel['arm']
     result = tel.groupby(['contig','tel-arm'])['teloPerct'].max().unstack(fill_value=0)
-    result['problem'] = "OK/OK"
     # check if columns are in the result
     check_columns = ['internal-left', 'internal-right', 'distal-left', 'distal-right']
     for col in check_columns:
         if col not in result.columns:
             result[col] = 0
-
-    missingTel = (result['distal-left']==0) | (result['distal-right']==0) 
-    INTEL = (result['internal-left']==0) | (result['internal-right']==0)
-
-    result.loc[missingTel & INTEL, 'problem'] = "MissingTel/INTEL"
-    result.loc[missingTel & ~INTEL, 'problem'] = "MissingTel/OK"
-    result.loc[~missingTel & INTEL, 'problem'] = "OK/INTEL"
-
+    # print(statsdb.head())
+    # print(result.head())
     result_merged = pd.merge(result, statsdb, left_on='contig', right_on='contig', how='right')
     print("Merging with stats database...")
+    # contigs absent from `tel` (e.g. no window passed the teloPerct filter) get NaN here; treat as no telomere found
+    result_merged[check_columns] = result_merged[check_columns].fillna(0)
+    # print(result_merged.head())
+    missingTel = (result_merged['distal-left']==0) | (result_merged['distal-right']==0)
+    INTEL = (result_merged['internal-left']==0) | (result_merged['internal-right']==0)
+
+    result_merged['problem'] = "OK/OK"
+    result_merged.loc[missingTel & INTEL, 'problem'] = "MissingTel/INTEL"
+    result_merged.loc[missingTel & ~INTEL, 'problem'] = "MissingTel/OK"
+    result_merged.loc[~missingTel & INTEL, 'problem'] = "OK/INTEL"
+
     result_merged = result_merged[['contig','distal-left','distal-right','internal-left','internal-right','problem','ref_chr','contig_len','ref_chr_len','hap','old_chr','completeness','hap_verkko','t2tStat']]
-    
-    
     
     # result_merged
     if out_prefix is None:

@@ -13,7 +13,7 @@ fi
 if ! command -v mashmap &> /dev/null
 then
     echo "mashmap could not be found, please install mashmap first."
-    exit
+    exit 1
 fi
 
 mkdir -p rDNA_mapping

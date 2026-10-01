@@ -669,4 +669,3 @@ def gapCleaning(fasta = "assembly_trimmed_flipped_rename_sortedhap.fasta"):
     basename = os.path.basename(fasta)
     basename = re.sub(r'\.fasta$|\.fa$|\.fasta\.gz$|\.fa\.gz$', '', basename)
     rDNA_gap_cleaning(fasta = fasta, gap_rDNA_info = f"{basename}.gaps.bed.rDNA.bounded.csv")
-

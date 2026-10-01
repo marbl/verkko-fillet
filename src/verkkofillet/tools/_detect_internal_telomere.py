@@ -38,7 +38,7 @@ def detect_internal_telomere(obj,
     -------
         assembly.windows.0.5.bed
     """
-    print("Starting detecting internal telomere in the assembly.fasta")
+    print("Starting detecting internal telomere in the assembly file:", fasta)
 
     script = os.path.abspath(os.path.join(script_path, "vgp-assembly", "telomere","telomere_analysis.sh"))
     asm = os.path.abspath(fasta)
@@ -170,4 +170,3 @@ def runTrimming(obj,
             pbar.update(1)
     
     print(f"Trimming completed. Output file: {output_fasta}")
-

@@ -27,14 +27,11 @@ def showMashmapOri(obj, mashmap_out = "chromosome_assignment/assembly.mashmap.ou
     """
     obj = copy.deepcopy(obj)
     working_dir = os.path.abspath(obj.verkko_fillet_dir)  # Ensure absolute path for the working directory
-    
+
+    print(f"Reading Mashmap output from {working_dir + '/' + mashmap_out}")
     mashmap = pd.read_csv(working_dir + "/" + mashmap_out , header = None, sep ='\t')
-    
     mashmap.columns = ['qname','qlen','qstart','qend','strand','tname','tlen','tstart','tend','nmatch','blocklen','mapQ','id','kc']
-    
     mashmap['block_q'] =  mashmap['qend'] - mashmap['qstart']
-    # mashmap.head(2)
-    # Group the data by 'qname', 'tname', and 'strand'
     grouped = mashmap.groupby(['qname', 'tname', 'strand'])
     data = grouped.agg(
         qlen=('qlen', 'first'),  # Take the first value of qlen as representative
@@ -48,20 +45,24 @@ def showMashmapOri(obj, mashmap_out = "chromosome_assignment/assembly.mashmap.ou
     # Filter rows based on 'qname' matching contig names in obj.stats['contig']
     contig_list = list(stats['contig'])  # Assuming this is a list of contig names
     data = data.loc[data['qname'].str.contains('|'.join(contig_list)), :]
-    
-    
+
     # Create a new column 'name' by concatenating 'ref_chr' and 'hap'
     if by == 'chr_hap':
-        stats['by'] = stats['ref_chr'].astype(str) + "_" + stats['hap']
+        stats['by'] = stats['ref_chr'].astype(str) + "_" + stats['hap'].astype(str)
     if by == 'contig':
-        stats['by'] = stats['contig']
+        stats['by'] = stats['contig'].astype(str)
     if by == 'all':
-        stats['by'] = stats['contig'] + '_' + stats['ref_chr'].astype(str) + "_" + stats['hap']
+        stats['by'] = stats['contig'].astype(str) + '_' + stats['ref_chr'].astype(str) + "_" + stats['hap'].astype(str)
         
     # Display the first two rows of the DataFrame
     data = pd.merge(data,stats,how= 'left',left_on = 'qname', right_on = 'contig')
+    # Drop rows with no matching stats entry, since 'by' would be NaN (float) and break barh
+    if data['by'].isna().any():
+        missing = data.loc[data['by'].isna(), 'qname'].unique()
+        print(f"Warning: no matching stats entry for qname(s): {list(missing)}, dropping from plot")
+        data = data.dropna(subset=['by'])
+    data['by'] = data['by'].astype(str)
     data.loc[data['strand'] == "-", 'qcover_perc'] *= -1
-    
     # Separate positive and negative values for clarity
     data['positive_qcover'] = data['qcover_perc'].where(data['strand'] == '+', 0)
     data['negative_qcover'] = data['qcover_perc'].where(data['strand'] == '-', 0)
@@ -71,7 +72,7 @@ def showMashmapOri(obj, mashmap_out = "chromosome_assignment/assembly.mashmap.ou
     
     # Prepare the plot
     fig, ax = plt.subplots(figsize=(width, height))
-    
+    print(data.head())
     # Add horizontal bars for positive and negative values
     ax.barh(data['by'], data['positive_qcover'], color='purple', label='Positive Strand')
     ax.barh(data['by'], data['negative_qcover'], color='skyblue', label='Negative Strand')
