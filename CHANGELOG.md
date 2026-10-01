@@ -4,6 +4,21 @@ All notable changes to verkko-fillet will be documented in this file.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [0.1.27] - 2026-10-01
+
+### Added
+- new function gapCleaning, which wrapper of map_rDNA, find_gap_in_rDNA, rDNA_gap_cleaning
+- new function gapCleaning, which wrapper of map_rDNA, find_gap_in_rDNA, rDNA_gap_cleaning
+
+### Fixed
+- readChr function accept haplotype1 and haplotype2 with str, and check if contig names contain the haplotype name, rather parsing the contig names.
+- n50Plot function uses hap column, instead of hap_verkko column from obj.stats
+- functions and scripts that are associated with internal telomere detection are fixed. The paths of the execs were wrong
+- functions and scripts that are associated with internal telomere detection are fixed. The paths of the execs were wrong
+- find_telomere.sh can find the correct vgp scripts
+- read_Verkko can ignore assembly.paths.tsv
+- make_verkko_fillet_dir.sh bug fix. make verkko-fillet directory after remove existing one
+
 ## [0.1.26] - 2026-09-28
 
 ### Fixed
