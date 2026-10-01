@@ -53,11 +53,9 @@ def n50Plot(obj, width = 8,height = 5 , save = True, figName = None, nprint = No
     # check the column name
     if colName not in stats.columns:
         raise ValueError(f"Column name {colName} not found in stats")
-    if "hap_verkko" not in stats.columns:
-        raise ValueError(f"Column name hap_verkko not found in stats")
-    
+
     stats[colName] = stats[colName].astype(str)
-    stats['by'] = stats[colName] + "_" + stats["hap_verkko"]
+    stats['by'] = stats[colName] + "_" + stats["hap"]
     stats.sort_values("contig_len", ascending=False, inplace=True)
     stats.reset_index(drop=True, inplace=True)
     total = stats["contig_len"].sum()
