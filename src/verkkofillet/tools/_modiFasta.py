@@ -647,3 +647,26 @@ def rDNA_gap_cleaning(fasta = "assembly_trimmed_flipped_rename_sortedhap.fasta",
     fix_fasta_rDNA(fasta = fasta, 
                       gap_rDNA_info = gap_rDNA_info, 
                       out_fasta = out_fasta, gap_size=gap_size, force=force)
+
+
+def gapCleaning(fasta = "assembly_trimmed_flipped_rename_sortedhap.fasta"):
+    """
+    Perform gap cleaning for rDNA regions in the given FASTA file.
+
+    Parameters
+    ----------
+    fasta : str
+        Path to the input FASTA file.
+
+    Returns
+    -------
+    None
+        The function executes the rDNA gap cleaning process.
+    """
+    map_rDNA(fasta = fasta)
+    find_gap_in_rDNA(fasta = fasta)
+    # basename # remove fasta.gz | fa | fasta | fa.gz
+    basename = os.path.basename(fasta)
+    basename = re.sub(r'\.fasta$|\.fa$|\.fasta\.gz$|\.fa\.gz$', '', basename)
+    rDNA_gap_cleaning(fasta = fasta, gap_rDNA_info = f"{basename}.gaps.bed.rDNA.bounded.csv")
+
