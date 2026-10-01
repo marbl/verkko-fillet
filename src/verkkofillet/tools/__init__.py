@@ -16,7 +16,7 @@ from ._kmer import mkMeryl,calQV
 from ._asm_stats import getT2T
 from ._run_rm_rDNA import rmrDNA
 from ._insert_gap import insertGap
-from ._modiFasta import flipContig,renameContig,sortContig,filterContigs,find_flip_candidates,map_rDNA,find_gap_in_rDNA,rDNA_gap_cleaning,screen_asm
+from ._modiFasta import flipContig,renameContig,sortContig,filterContigs,find_flip_candidates,map_rDNA,find_gap_in_rDNA,rDNA_gap_cleaning,screen_asm,gapCleaning
 from ._detect_internal_telomere import detect_internal_telomere,runTrimming
 from ._cov_unphc_phc_space import build_sparse_compression_map,lift_seqs, addPadding_to_bed, make_bandage_csv
 
@@ -49,4 +49,5 @@ __all__ = [
     'find_gap_in_rDNA',
     'rDNA_gap_cleaning',
     'screen_asm',
+    'gapCleaning'
 ]
