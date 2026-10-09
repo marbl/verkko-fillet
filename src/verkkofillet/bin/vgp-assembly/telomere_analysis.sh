@@ -1,7 +1,8 @@
 #!/bin/bash
 
 genome=$1
-VGP_PIPELINE=$(readlink -f "$0")
+VGP_PIPELINE=$(dirname "$(readlink -f "$0")")
+echo "script location : $VGP_PIPELINE"
 
 if [[ -z $genome ]]; then
     echo "Usage: ./telomere.sh <genome_id> <threshold> <ends> <asm.fa> [asm.csv]"
