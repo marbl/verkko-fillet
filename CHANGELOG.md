@@ -4,6 +4,12 @@ All notable changes to verkko-fillet will be documented in this file.
 
 The project follows [Semantic Versioning](https://semver.org/).
 
+## [0.1.28] - 2026-10-09
+
+### Fixed
+- telomere_analysis.sh were fixed to locate the correct directory
+- remove verkko_hap
+
 ## [0.1.27] - 2026-10-01
 
 ### Added
