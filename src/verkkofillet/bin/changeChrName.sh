@@ -34,11 +34,11 @@ cmd1="awk 'NR==FNR{a[\$1]=\$2; next} /^>/{header=\$0; for (i in a) if (index(hea
 cmd2="samtools faidx  ${outputFasta}.tmp"
 cmd3="samtools faidx ${outputFasta}.tmp $(cut -f 2 ${mapFile}.tmp  | tr '\n' ' ') > $outputFasta"
 cmd4="samtools faidx $outputFasta"
-cmd5="rm ${outputFasta}.tmp* chrom.map.tmp"
+# cmd5="rm ${outputFasta}.tmp* chrom.map.tmp"
 
 echo "Executing command 1: $cmd1" && eval $cmd1 &&
 echo "Executing command 2: $cmd2" && eval $cmd2 &&
 echo "Executing command 3: $cmd3" && eval $cmd3 &&
 echo "Executing command 4: $cmd4" && eval $cmd4 &&
-echo "Executing command 5: $cmd5" && eval $cmd5 &&
+# echo "Executing command 5: $cmd5" && eval $cmd5 &&
 echo "All commands executed successfully."
