@@ -109,7 +109,7 @@ def find_intra_telo(obj, telo_file="internal_telomere/assembly_1/assembly.window
     result_merged.loc[missingTel & ~INTEL, 'problem'] = "MissingTel/OK"
     result_merged.loc[~missingTel & INTEL, 'problem'] = "OK/INTEL"
 
-    result_merged = result_merged[['contig','distal-left','distal-right','internal-left','internal-right','problem','ref_chr','contig_len','ref_chr_len','hap','old_chr','completeness','hap_verkko','t2tStat']]
+    result_merged = result_merged[['contig','distal-left','distal-right','internal-left','internal-right','problem','ref_chr','contig_len','ref_chr_len','hap','old_chr','completeness','t2tStat']]
     
     # result_merged
     if out_prefix is None:
