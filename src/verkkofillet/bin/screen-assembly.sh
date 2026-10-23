@@ -36,7 +36,7 @@ then
     module load samtools
     module load seqtk
     ml perl
-    ml verkko
+    # ml verkko
 fi
 # check seqtk and mashamp is installed
 tools="seqtk mashmap perl verkko"
@@ -60,35 +60,35 @@ if [ ! -d "$verkko_dir" ]; then
     exit 1
 fi
 
-if [ -n "$2" ]; then
-    threads=$2
-else
+if [ -z "$2" ] || [ "$2" == "None" ]; then
     threads=10
+else
+    threads=$2
 fi
 
 # if $3 is provided, use it as the minlength, otherwise default to 1000
-if [ "$3" == "None" ]; then
+if [ -z "$3" ] || [ "$3" == "None" ]; then
     minlength=1000
 else
     minlength=$3
 fi
 
-if [ -n "$4" ] && [ "$4" != "None" ]; then
-    ebv=$4
-else
+if [ -z "$4" ] || [ "$4" == "None" ]; then
     ebv=$verkko_data/human-ebv-AJ507799.2.fasta.gz
+else
+    ebv=$4
 fi
 
-if [ -n "$5" ] && [ "$5" != "None" ]; then
-    rDNA=$5
-else
+if [ -z "$5" ] || [ "$5" == "None" ]; then
     rDNA=$verkko_data/human-rdna-KY962518.1.fasta.gz
+else
+    rDNA=$5
 fi
 
-if [ -n "$6" ] && [ "$6" != "None" ]; then
-    mt=$6
-else
+if [ -z "$6" ] || [ "$6" == "None" ]; then
     mt=$verkko_data/human-mito-NC_012920.1.fasta.gz
+else
+    mt=$6
 fi
 
 
